@@ -1,6 +1,6 @@
 
 "use client"
-import { SignupSchema } from '@/app/schemas/auth'
+import { LoginSchema } from '@/app/schemas/auth'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field'
@@ -8,24 +8,26 @@ import { Input } from '@/components/ui/input'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Controller, useForm } from 'react-hook-form'
 import {z} from 'zod'
-import { signupUser } from '@/lib/services/auth.services'
+import { loginUser} from '@/lib/services/auth.services'
+import { useRouter } from 'next/navigation'
 
 export default function SignUp(){
 
+    const router= useRouter()
     const form=useForm({
-        resolver : zodResolver(SignupSchema), //this line says whenever you need to validate, run the values through SignupSchema and report back errors
+        resolver : zodResolver(LoginSchema), //this line says whenever you need to validate, run the values through SignupSchema and report back errors
         defaultValues : {
-            name :"",
             email:'',
             password:""
         }
     })
 
-   async function onsubmit(data : z.infer<typeof SignupSchema>){
+   async function onsubmit(data : z.infer<typeof LoginSchema>){
         try {
-            const result=await signupUser(data)
+            const result=await loginUser(data)
 
             console.log("Sign up : ",result)
+            router.push("/dashboard")
         } catch (error) {
             console.error("Signup failed : ",error)
         }
@@ -41,16 +43,6 @@ export default function SignUp(){
         <CardContent>
             <form onSubmit={form.handleSubmit(onsubmit)}>
                 <FieldGroup className='gap-4'>
-                    <Controller name="name" control={form.control} //connects the input to the react hook form
-                     render={({field,fieldState})=>(
-                        <Field>
-                            <FieldLabel>Full Name</FieldLabel>
-                            <Input aria-invalid={fieldState.invalid} placeholder='John Dove' type="text" {...field} />
-                            {fieldState.invalid && (
-                             <FieldError errors={[fieldState.error]} />   
-                            )}
-                        </Field>
-                    )} />
                     <Controller name="email" control={form.control} //connects the input to the react hook form
                      render={({field,fieldState})=>(
                         <Field>
@@ -73,7 +65,7 @@ export default function SignUp(){
                         </Field>
                     )} />
 
-                    <Button type='submit'>Signup </Button>
+                    <Button type='submit'>Login </Button>
                 </FieldGroup>
             </form>
         </CardContent>
@@ -81,8 +73,3 @@ export default function SignUp(){
   )
 }
 
-
-// libraries use
-//React Hook Form for validation -->validates the rules and gives error if found
-//hookform/resolvers zod  --> acts as a bridge between React Hook Form and Zod  
-//Zod for creating schema --> makes the rules

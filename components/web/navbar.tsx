@@ -1,7 +1,40 @@
+"use client"
 import Link from "next/link"
-import { buttonVariants } from "../ui/button"
+import { Button, buttonVariants } from "../ui/button"
 import { ThemeToggle } from "./theme-toggle"
+import { getMe,userLogout } from "@/lib/services/auth.services"
+import { useEffect, useState } from "react"
+import type {  User } from "@/types/user"
+import { useRouter } from "next/navigation"
+
+
 export function Navbar() {
+
+    const [user,setUser]=useState<User | null>(null)
+    const [loading,setLoading]=useState(true)
+    const router=useRouter()
+
+  useEffect(()=>{
+    try {
+        const getUser=async()=>{
+          const response=await getMe()
+          setUser(response.user)
+        }
+  
+        getUser()
+    } catch (error) {
+        console.log(error)
+    } finally {
+      setLoading(false);
+    }
+  },[])
+
+  async function handleLogout(){
+        await userLogout()
+        setUser(null)
+        router.push('/auth/login')
+  }
+  
     return(
         <nav className="w-full py-5 flex items-center justify-between">
             <div className="flex items-center gap-8">
@@ -19,9 +52,18 @@ export function Navbar() {
             </div>
 
             <div className="flex items-center gap-2">
-                <Link className={buttonVariants()} href='/auth/sign-up'>Sign up</Link>
-                <Link className={buttonVariants({variant : "secondary"})} href='/auth/login'>Login</Link>
-                <ThemeToggle />
+                {loading ? null : user ? (
+                    <>
+                        <span>Hi , {user?.name}</span>
+                        <Button onClick={handleLogout}>Logout</Button>
+                    </>
+                ):(
+                    <>
+                        <Link className={buttonVariants()} href='/auth/sign-up'>Sign up</Link>
+                        <Link className={buttonVariants({variant : "secondary"})} href='/auth/login'>Login</Link>
+                        <ThemeToggle />
+                    </>
+                )}
             </div>
         </nav>
     )

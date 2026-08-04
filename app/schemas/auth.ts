@@ -5,3 +5,9 @@ export const SignupSchema=z.object({
     email: z.email("Invalid Email"),
     password : z.string().min(8,"Min length must be 8").max(30,"Max length exceeded")
 })
+
+// app/schemas/auth.ts
+export const LoginSchema = z.object({
+    email: z.email("Invalid Email"),
+    password: z.string().min(8, "Min length must be 8").max(30, "Max length exceeded")
+})
