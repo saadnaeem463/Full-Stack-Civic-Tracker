@@ -25,4 +25,5 @@ export const reportForm = z.object({
     })
   ),
   accessibilityFlag: z.boolean(),
+  location : z.string()
 });

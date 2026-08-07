@@ -128,3 +128,13 @@
     @apply font-sans;
   }
 }
+
+.leaflet-popup-content-wrapper {
+  padding: 0;
+  border-radius: 16px;
+  overflow: hidden;
+}
+.leaflet-popup-content {
+  margin: 0;
+  width: 240px !important;
+}

@@ -15,6 +15,10 @@ const ReportSchema = new Schema({
     url : {type : String,required: true},
     type : {type : String,required: true}
   }],
+  location : {type : String,required : true},
+  upVoteCount : {type : Number,default : 0},
+  commentCount :{type : Number,default : 0},
+  status : {type : String, enum : ['open','in-progress','resolved'] , default : 'open'},
   accessibilityFlag: { type: Boolean, default: false },
 },{ timestamps: true });
 

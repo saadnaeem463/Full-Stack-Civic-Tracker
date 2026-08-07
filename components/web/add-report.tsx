@@ -39,6 +39,7 @@ const AddReport = () => {
     lng: number;
   } | null>(null);
   const [locationMode, setLocationMode] = useState<"gps" | "search">("gps");
+  const [locationName,setLocationName]=useState('')
 
   const handleCordinates = () => {
     if (!navigator.geolocation) {
@@ -50,12 +51,27 @@ const AddReport = () => {
     setLocationError(null);
 
     navigator.geolocation.getCurrentPosition(
-      (position) => {
+     async (position) => {
+
+       const lat= position.coords.latitude
+       const lng= position.coords.longitude
+        
         setCordinates({
-          lat: position.coords.latitude,
-          lng: position.coords.longitude,
+            lat,lng
         });
-        setLocating(false);
+                // We have coordinates but no human-readable name yet — ask the same
+        // /api/geocode route to reverse-geocode them, same as the search flow does forward.
+        try {
+          const res = await fetch(`/api/geocode?lat=${lat}&lng=${lng}`);
+          const data = await res.json();
+          setLocationName(data.label || `${lat.toFixed(5)}, ${lng.toFixed(5)}`);
+        } catch (error) {
+          console.error("Reverse geocode failed:", error);
+          // Fall back to raw coordinates so submission still has a valid `location` string
+          setLocationName(`${lat.toFixed(5)}, ${lng.toFixed(5)}`);
+        } finally {
+          setLocating(false);
+        }
       },
       (err) => {
         setLocationError(err.message || "Couldn't get your location");
@@ -127,6 +143,7 @@ const AddReport = () => {
       media: media.map(({ url, type }) => ({ url, type })),
       lat: cordinates?.lat,
       lng: cordinates?.lng,
+      location : locationName
     };
 
     try {
@@ -242,6 +259,10 @@ const AddReport = () => {
                   </Button>
                 ) : (
                   <LocationSearch
+                    setTitle={(title)=>{
+                      setLocationName(title)
+                      console.log(locationName)
+                    }}
                     onSelect={(loc) =>
                       setCordinates({ lat: loc.lat, lng: loc.lng })
                     }

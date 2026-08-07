@@ -35,6 +35,7 @@ export async function POST(request:Request){
         lng: parsed.data.lng,
         media: parsed.data.media,
         accessibilityFlag: parsed.data.accessibilityFlag,
+        location: parsed.data.location
         })
 
         return Response.json({report});

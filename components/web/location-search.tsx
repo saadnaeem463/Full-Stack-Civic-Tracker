@@ -7,7 +7,9 @@ interface LocationResult{
     lng : number
 }
 
-const LocationSearch = ({onSelect} : {onSelect : (loc : LocationResult)=>void}) => {
+
+
+const LocationSearch = ({onSelect,setTitle} : {onSelect : (loc : LocationResult)=>void,setTitle : (title : string)=>void }) => {
 
     const [query,setQuery]=useState<string>("")
     const [loading,setLoading]=useState(false)
@@ -52,6 +54,8 @@ const LocationSearch = ({onSelect} : {onSelect : (loc : LocationResult)=>void}) 
                         onSelect(r)
                         setOpen(false)
                         setQuery(r.label)
+                        setTitle(r.label)
+                        
                     }}
                     className="cursor-pointer px-3 py-2 text-sm hover:bg-zinc-50"
                     >

@@ -3,6 +3,38 @@ import { NextRequest, NextResponse } from "next/server"
 const KARACHI_VIEWBOX = "66.85,25.05,67.50,24.70"
 
 export async function GET(req: NextRequest) {
+
+  const lat=req.nextUrl.searchParams.get('lat')
+  const lng=req.nextUrl.searchParams.get('lng')
+
+  if(lat && lng){
+      const reverseUrl=new URL('https://nominatim.openstreetmap.org/reverse')
+      reverseUrl.searchParams.set("lat",lat)
+      reverseUrl.searchParams.set("lon",lng)
+      reverseUrl.searchParams.set("format","json")
+      reverseUrl.searchParams.set("accept-language","en")
+      reverseUrl.searchParams.set("zoom","18")
+
+      const res = await fetch(reverseUrl.toString(), {
+      headers: {
+        "User-Agent": "CivicTrack/1.0 (contact: saadhamza8265@gmail.com)",
+      },
+    })
+
+    if (!res.ok) return NextResponse.json({ label: null }, { status: 502 })
+
+    const data = await res.json()
+    if (data.error) return NextResponse.json({ label: null })
+
+    // display_name is verbose ("Shop 4, Block 2, ... Karachi, Sindh, 75500, Pakistan").
+    // Trim it down to the first few segments so it reads like a normal address.
+    const label = (data.display_name as string)?.split(",").slice(0, 4).join(",").trim()
+
+    return NextResponse.json({ label: label ?? null })
+
+  }
+
+  
   const query = req.nextUrl.searchParams.get("q")
   if (!query || query.trim().length < 3) {
     return NextResponse.json({ results: [] })

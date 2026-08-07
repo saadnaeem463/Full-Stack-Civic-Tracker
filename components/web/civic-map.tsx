@@ -8,6 +8,7 @@ import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png"
 import markerIcon from "leaflet/dist/images/marker-icon.png"
 import markerShadow from "leaflet/dist/images/marker-shadow.png"
 import "leaflet/dist/leaflet.css"
+import { ReportMarker } from "./markers"
 
 // Leaflet's default marker icons break under bundlers like webpack/Next — fix once, here.
 // Bundled locally via import instead of an external CDN, so ad-blockers / Brave Shields
@@ -26,11 +27,18 @@ const CITY_BOUNDS: [[number, number], [number, number]] = [
   [24.95, 67.20], // northeast corner
 ]
 
+const PADDED_BOUNDS = L.latLngBounds(CITY_BOUNDS).pad(0.15)
 interface Report {
   _id: string
   lat: number
   lng: number
   title: string
+  location: string
+  createdAt: string
+   media?: { url: string; type: string }[]
+  status: "open" | "in-progress" | "resolved"
+  upvoteCount: number
+  commentCount: number
 }
 
 function FitToReports({ reports }: { reports: Report[] }) {
@@ -55,7 +63,7 @@ export function CivicMap({ reports }: { reports: Report[] }) {
       center={CITY_CENTER}
       zoom={13}
       minZoom={11}
-      maxBounds={CITY_BOUNDS}
+      maxBounds={PADDED_BOUNDS}
       maxBoundsViscosity={1.0}
       className="h-full w-full"
     >
@@ -64,10 +72,8 @@ export function CivicMap({ reports }: { reports: Report[] }) {
         attribution='&copy; OpenStreetMap contributors'
       />
       <FitToReports reports={safeReports} />
-      {safeReports.map((report) => (
-        <Marker key={report._id} position={[report.lat, report.lng]}>
-          <Popup>{report.title}</Popup>
-        </Marker>
+      {safeReports.map((r) => (
+        <ReportMarker key={r._id} report={r} />
       ))}
     </MapContainer>
   )
