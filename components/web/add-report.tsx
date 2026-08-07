@@ -1,5 +1,6 @@
 import { useId, useState } from "react";
 import type React from "react";
+import LocationSearch from "./location-search";
 
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -15,146 +16,156 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-type UploadedMedia={
-    url : string;
-    type : string; //image/jpeg or video/mp4
-    name : string
-}
+type UploadedMedia = {
+  url: string;
+  type: string; //image/jpeg or video/mp4
+  name: string;
+};
 type UploadResponse = { url: string; contentType: string; error?: string };
 
-const MAX_FILES=4
+const MAX_FILES = 4;
 
 const AddReport = () => {
   const id = useId();
 
-  const [media,setMedia]=useState<UploadedMedia[]>([])
-  const [uploading,setUploading]=useState(false);
-  const [uploadError,setUploadError]=useState<string | null>(null)
-  const [submitting,setSubmitting]=useState(false)
-  const [locating,setLocating]=useState(false)
-  const [locationError,setLocationError]=useState<string | null>(null)
-  const [cordinates,setCordinates]=useState<{lat: number,lng : number} | null>(null)
+  const [media, setMedia] = useState<UploadedMedia[]>([]);
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [locating, setLocating] = useState(false);
+  const [locationError, setLocationError] = useState<string | null>(null);
+  const [cordinates, setCordinates] = useState<{
+    lat: number;
+    lng: number;
+  } | null>(null);
+  const [locationMode, setLocationMode] = useState<"gps" | "search">("gps");
 
-  const handleCordinates=()=>{
-      if(!navigator.geolocation){
-        setLocationError("Gelocation isn't supported on this device")
-        return
-      }
+  const handleCordinates = () => {
+    if (!navigator.geolocation) {
+      setLocationError("Gelocation isn't supported on this device");
+      return;
+    }
 
-      setLocating(true)
-      setLocationError(null)
+    setLocating(true);
+    setLocationError(null);
 
-      navigator.geolocation.getCurrentPosition((position)=>{
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
         setCordinates({
-          lat : position.coords.latitude,
-          lng : position.coords.longitude
-        })
-        setLocating(false)
-      },(err)=>{
-          setLocationError(err.message || "Couldn't get your location")
-          setLocating(false)
+          lat: position.coords.latitude,
+          lng: position.coords.longitude,
+        });
+        setLocating(false);
       },
-    { enableHighAccuracy: true, timeout: 10000 }
-    )
-  }
+      (err) => {
+        setLocationError(err.message || "Couldn't get your location");
+        setLocating(false);
+      },
+      { enableHighAccuracy: true, timeout: 10000 },
+    );
+  };
 
-  const handleFileChange=async(e:React.ChangeEvent<HTMLInputElement>)=>{
-    const files=e.target.files
-    if(!files || files.length ===0) return
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
 
-    if(media.length + files.length > MAX_FILES){
-      setUploadError(`You can attach up to ${MAX_FILES} files per report.`)
-      e.target.value=""
-      return
+    if (media.length + files.length > MAX_FILES) {
+      setUploadError(`You can attach up to ${MAX_FILES} files per report.`);
+      e.target.value = "";
+      return;
     }
 
-    setUploadError(null)
-    setUploading(true)
+    setUploadError(null);
+    setUploading(true);
 
     try {
-      const uploads=await Promise.all(
-        Array.from(files).map(async(file)=>{
-          const formData=new FormData()
-          formData.append("file",file)
+      const uploads = await Promise.all(
+        Array.from(files).map(async (file) => {
+          const formData = new FormData();
+          formData.append("file", file);
 
-          const res=await fetch("/api/upload",{
-            method : "POST",
-            body : formData
-          })
-          const data=await res.json() as UploadResponse
+          const res = await fetch("/api/upload", {
+            method: "POST",
+            body: formData,
+          });
+          const data = (await res.json()) as UploadResponse;
 
-          if(!res.ok) throw new Error(data.error || "upload failed")
+          if (!res.ok) throw new Error(data.error || "upload failed");
 
-          return {url: data.url,type :data.contentType,name:file.name} as UploadedMedia
-        })
-      )
+          return {
+            url: data.url,
+            type: data.contentType,
+            name: file.name,
+          } as UploadedMedia;
+        }),
+      );
 
-      setMedia((prev)=>[...prev,...uploads])
+      setMedia((prev) => [...prev, ...uploads]);
     } catch (error) {
-      console.error("Upload failed : ",error)
-      setUploadError("One or more files failed to upload, try again")
-    }finally{
-      setUploading(false)
-      e.target.value=""
+      console.error("Upload failed : ", error);
+      setUploadError("One or more files failed to upload, try again");
+    } finally {
+      setUploading(false);
+      e.target.value = "";
     }
-  }
+  };
 
-  const removeMedia=(url: string)=>{
-    setMedia((prev)=>prev.filter((m)=>m.url!==url))
-  }
+  const removeMedia = (url: string) => {
+    setMedia((prev) => prev.filter((m) => m.url !== url));
+  };
 
-  const handleSubmit = async(e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setSubmitting(true)
+    setSubmitting(true);
 
-    const formData=new FormData(e.currentTarget)
-    const payload={
-      issueType : formData.get("issueType"),
-      title :formData.get("attention"),
+    const formData = new FormData(e.currentTarget);
+    const payload = {
+      issueType: formData.get("issueType"),
+      title: formData.get("attention"),
       details: formData.get("details"),
-      accessibilityFlag : formData.get("accessibility") === "on",
-      media : media.map(({url,type})=>({url,type})),
-      lat : cordinates?.lat,
-      lng : cordinates?.lng
-    }
+      accessibilityFlag: formData.get("accessibility") === "on",
+      media: media.map(({ url, type }) => ({ url, type })),
+      lat: cordinates?.lat,
+      lng: cordinates?.lng,
+    };
 
     try {
-      const res = await fetch("/api/reports",{
-        method :"POST",
-        headers : {"Content-Type" : "application/json"},
-        body : JSON.stringify(payload)
-      })
-      const result= await res.json()
-      if(!res.ok){
-        throw new Error(result.error || "Failed to submit report")
+      const res = await fetch("/api/reports", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const result = await res.json();
+      if (!res.ok) {
+        throw new Error(result.error || "Failed to submit report");
       }
-      e.currentTarget.reset()
-      setMedia([])
+      e.currentTarget.reset();
+      setMedia([]);
     } catch (error) {
-      console.log("Submit failed : ",error)
-    }finally{
-      setMedia([])
-      setLocating(false)
-      setUploadError("")
-      setCordinates(null)
-      setUploading(false)
+      console.log("Submit failed : ", error);
+    } finally {
+      setMedia([]);
+      setLocating(false);
+      setUploadError("");
+      setCordinates(null);
+      setUploading(false);
       setSubmitting(false);
-      setLocationError("")
+      setLocationError("");
     }
   };
 
   return (
     <Dialog>
-    <DialogTrigger
-    render={
-        <Button
-        variant="outline"
-        className="rounded-xl border border-teal-200 bg-teal-50 px-6 py-2 font-medium text-teal-800 transition-all hover:bg-teal-100 dark:border-cyan-800 dark:bg-cyan-950 dark:text-cyan-100 dark:hover:bg-cyan-900"
-        />
-    }
-    >
-    Report an issue
-    </DialogTrigger>
+      <DialogTrigger
+        render={
+          <Button
+            variant="outline"
+            className="rounded-xl border border-teal-200 bg-teal-50 px-6 py-2 font-medium text-teal-800 transition-all hover:bg-teal-100 dark:border-cyan-800 dark:bg-cyan-950 dark:text-cyan-100 dark:hover:bg-cyan-900"
+          />
+        }
+      >
+        Report an issue
+      </DialogTrigger>
       <DialogContent className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-xl sm:max-w-lg dark:border-zinc-800 dark:bg-zinc-900">
         <DialogHeader className="space-y-1.5 text-left">
           <DialogDescription className="text-xs font-semibold tracking-wider text-zinc-400 uppercase dark:text-zinc-500">
@@ -182,31 +193,65 @@ const AddReport = () => {
               </select>
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="location">Location</Label>
-              <Button
-                onClick={handleCordinates}
-                type="button"
-                variant="outline"
-                className="h-10 w-full justify-start gap-2 rounded-xl border border-zinc-200 bg-white px-3 text-sm font-normal text-zinc-600 hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="text-teal-600 dark:text-cyan-500"
-                >
-                  <circle cx="12" cy="12" r="10" />
-                  <circle cx="12" cy="12" r="3" />
-                </svg>
-                {locating ? "Locating" : cordinates ? "Location set ✓" : "Use my Location"}
-              </Button>
-              {locationError && <span className="text-xs text-red-500">{locationError}</span>}
+              <div className="grid gap-2">
+                <Label>Location</Label>
+                <div className="flex gap-2 rounded-xl bg-zinc-100 p-1 dark:bg-zinc-800">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setLocationMode("gps");
+                      setLocationError(null);
+                    }}
+                    className={`flex-1 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
+                      locationMode === "gps"
+                        ? "bg-white text-zinc-900 shadow-sm dark:bg-zinc-900 dark:text-zinc-100"
+                        : "text-zinc-500 dark:text-zinc-400"
+                    }`}
+                  >
+                    Use my location
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setLocationMode("search");
+                      setLocationError(null);
+                    }}
+                    className={`flex-1 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
+                      locationMode === "search"
+                        ? "bg-white text-zinc-900 shadow-sm dark:bg-zinc-900 dark:text-zinc-100"
+                        : "text-zinc-500 dark:text-zinc-400"
+                    }`}
+                  >
+                    Search address
+                  </button>
+                </div>
+
+                {locationMode === "gps" ? (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleCordinates}
+                    disabled={locating}
+                    className="w-full justify-start gap-2 rounded-xl border border-zinc-200 bg-white px-3 text-sm font-normal text-zinc-600 hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800"
+                  >
+                    {locating
+                      ? "Locating…"
+                      : cordinates
+                        ? "Location set ✓"
+                        : "Use My Location"}
+                  </Button>
+                ) : (
+                  <LocationSearch
+                    onSelect={(loc) =>
+                      setCordinates({ lat: loc.lat, lng: loc.lng })
+                    }
+                  />
+                )}
+
+                {locationError && (
+                  <span className="text-xs text-red-500">{locationError}</span>
+                )}
+              </div>
             </div>
           </div>
           <div className="grid gap-2">
@@ -232,11 +277,13 @@ const AddReport = () => {
             <Label htmlFor="photo">Add a photo (optional)</Label>
             <div className="flex items-center justify-between rounded-xl border border-dashed border-zinc-300 bg-zinc-50 px-4 py-3 dark:border-zinc-700 dark:bg-zinc-800/50">
               <span className="text-sm text-zinc-500 dark:text-zinc-400">
-                {uploading ? "Uploading.."
-                :media.length>0 ? `${media.length} file${media.length > 1 ? "s" : ""} attached`
-                : "No file chosen"}
+                {uploading
+                  ? "Uploading.."
+                  : media.length > 0
+                    ? `${media.length} file${media.length > 1 ? "s" : ""} attached`
+                    : "No file chosen"}
               </span>
-               <label
+              <label
                 htmlFor="photo"
                 className="cursor-pointer rounded-lg border border-zinc-300 bg-white px-3 py-1.5 text-xs font-medium text-zinc-700 hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
               >
@@ -249,7 +296,7 @@ const AddReport = () => {
                 accept="image/*,video/*"
                 multiple
                 onChange={handleFileChange}
-                disabled={uploading || media.length>=MAX_FILES}
+                disabled={uploading || media.length >= MAX_FILES}
               />
             </div>
 
@@ -259,17 +306,24 @@ const AddReport = () => {
 
             {media.length > 0 && (
               <div className="grid grid-cols-4 gap-2 mt-1">
-                {media.map((m)=>(
-                  <div  key={m.url} className="relative">
-                    {m.type.startsWith("video")? (
-                      <video src={m.url} className="rounded-lg h-20 w-full object-cover" />
-                    ): (
-                      <img src={m.url} alt={m.name} className="rounded-lg h-20 w-full object-cover" />
+                {media.map((m) => (
+                  <div key={m.url} className="relative">
+                    {m.type.startsWith("video") ? (
+                      <video
+                        src={m.url}
+                        className="rounded-lg h-20 w-full object-cover"
+                      />
+                    ) : (
+                      <img
+                        src={m.url}
+                        alt={m.name}
+                        className="rounded-lg h-20 w-full object-cover"
+                      />
                     )}
                     <button
-                    type="button"
-                    onClick={()=>removeMedia(m.url)}
-                    className="absolute -top-1 -right-1 flex items-center justify-center rounded-full bg-black/70 text-white text-xs w-5 h-5"
+                      type="button"
+                      onClick={() => removeMedia(m.url)}
+                      className="absolute -top-1 -right-1 flex items-center justify-center rounded-full bg-black/70 text-white text-xs w-5 h-5"
                     >
                       X
                     </button>
