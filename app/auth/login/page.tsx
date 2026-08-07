@@ -27,7 +27,7 @@ export default function SignUp(){
             const result=await loginUser(data)
 
             console.log("Sign up : ",result)
-            router.push("/dashboard")
+            router.push("/")
         } catch (error) {
             console.error("Signup failed : ",error)
         }
