@@ -2,6 +2,7 @@
 
 import dynamic from "next/dynamic"
 import { useEffect, useState } from "react"
+import { pusherClient,REPORTS_CHANNEL,NEW_REPORT_EVENT } from "@/lib/pusher-client"
 
 const CivicMap = dynamic(() => import("@/components/web/civic-map").then(m => m.CivicMap), {
   ssr: false,
@@ -31,6 +32,28 @@ export default function Home() {
     };
     fetchReports();
   }, []);
+
+    // Live updates: anyone's /api/reports POST triggers this event, so every open tab
+  // (including the submitter's own, once the request round-trips) appends it here —
+  // no polling, no manual refresh.
+
+  useEffect(()=>{
+    const channel=pusherClient.subscribe(REPORTS_CHANNEL)
+    channel.bind(NEW_REPORT_EVENT,(newReport:Report)=>{
+      setReports((prev)=>{
+              
+        // Guard against double-adding: the submitter's own initial fetch/response could
+        // race with this event landing, and Strict Mode can re-run effects in dev
+      if(prev.some((r)=>r._id===newReport._id)) return prev
+      return [...prev,newReport]
+      })
+    })
+
+    return()=>{
+      channel.unbind(NEW_REPORT_EVENT)
+      pusherClient.unsubscribe(REPORTS_CHANNEL)
+    }
+  },[])
 
   return (
     <div className="pt-20 h-screen relative isolate">

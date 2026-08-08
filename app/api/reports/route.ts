@@ -4,6 +4,8 @@ import { verifyToken } from "@/lib/jwt";
 import { Report } from "@/models/report";
 import { cookies } from "next/headers";
 import { reportForm } from "@/app/schemas/auth";
+import { pusherServer } from "@/lib/pusher";
+import { REPORTS_CHANNEL,NEW_REPORT_EVENT } from "@/lib/pusher-events";
 
 export async function POST(request:Request){
     const cookiesStore=await cookies()
@@ -38,6 +40,9 @@ export async function POST(request:Request){
         location: parsed.data.location
         })
 
+        pusherServer
+        .trigger(REPORTS_CHANNEL,NEW_REPORT_EVENT,report)
+        .catch((pusherErr) => console.error("Pusher trigger failed:", pusherErr));
         return Response.json({report});
     }catch(err){
         console.error("Create report failed:", err);
