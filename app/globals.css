@@ -131,10 +131,16 @@
 
 .leaflet-popup-content-wrapper {
   padding: 0;
-  border-radius: 16px;
+  border-radius: 12px;
   overflow: hidden;
+  box-shadow: 0 8px 30px -4px rgba(0,0,0,0.12), 0 2px 8px -2px rgba(0,0,0,0.08);
+  border: 1px solid rgba(0,0,0,0.06);
 }
 .leaflet-popup-content {
   margin: 0;
-  width: 240px !important;
+  width: 300px !important;
+}
+.leaflet-popup-tip {
+  box-shadow: none;
+  border: 1px solid rgba(0,0,0,0.06);
 }
