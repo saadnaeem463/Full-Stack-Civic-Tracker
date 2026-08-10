@@ -24,6 +24,7 @@ interface Report {
   lat: number
   lng: number
   title: string
+  details?: string
   location: string
   createdAt: string
   media?: { url: string; type: string }[]
@@ -41,6 +42,17 @@ interface Comment {
 }
 
 const PLACEHOLDER_IMAGE = "/file.svg"
+
+function formatDate(dateStr: string) {
+  const d = new Date(dateStr)
+  return d.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  })
+}
 
 const statusStyles = {
   "open": "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
@@ -60,15 +72,39 @@ export function ReportMarker({ report }: { report: Report }) {
   const markerRef = useRef<L.Marker>(null)
   const popupRef = useRef<HTMLDivElement>(null)
   const hoverTimeout = useRef<ReturnType<typeof setTimeout>>(null)
+  const reportId=report._id
 
-  const handleAddComment = () => {
+  const handleAddComment =async () => {
     const text = draft.trim()
-    if (!text) return
-    setComments((prev) => [
-      ...prev,
-      { id: crypto.randomUUID(), author: "You", text, time: "Just now", likes: 0 },
-    ])
-    setDraft("")
+    const payload={
+      comment : text,
+      reportId
+    }
+
+    try {
+        const response=await fetch('/api/reports/comment',{
+          method : 'POST',
+          headers : {"Content-Type" : "application/json"},
+          body : JSON.stringify(payload)
+        })
+
+        if(!response.ok){
+          console.log('Erro while posting comment')
+          return
+        }
+
+        const data = await response.json()
+        console.log(data.payload)
+    } catch (error) {
+      console.log(error)
+    }
+    // console.log(text)
+    // if (!text) return
+    // setComments((prev) => [
+    //   ...prev,
+    //   { id: crypto.randomUUID(), author: "You", text, time: "Just now", likes: 0 },
+    // ])
+    // setDraft("")
   }
 
   const openPopup = useCallback(() => {
@@ -113,6 +149,8 @@ export function ReportMarker({ report }: { report: Report }) {
             title={report.title}
             description={report.location}
             src={report.media?.[0]?.url ?? PLACEHOLDER_IMAGE}
+            details={report.details}
+            date={formatDate(report.createdAt)}
           >
             {/* Status & Actions Bar */}
             <div className="flex w-full items-center justify-between">
@@ -125,9 +163,6 @@ export function ReportMarker({ report }: { report: Report }) {
                 <button className="flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium text-zinc-600 transition-colors hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800">
                   <ArrowBigUp className="h-4 w-4" />
                   {report.upvoteCount}
-                </button>
-                <button className="flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium text-zinc-600 transition-colors hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800">
-                  <ArrowBigDown className="h-4 w-4" />
                 </button>
                 <button className="flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium text-zinc-600 transition-colors hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800">
                   <Share2 className="h-3.5 w-3.5" />

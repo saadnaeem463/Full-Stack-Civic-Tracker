@@ -3,7 +3,7 @@
 import * as React from "react"
 import { createPortal } from "react-dom"
 import { AnimatePresence, motion } from "motion/react"
-import { X, MapPin, ChevronRight, MessageSquare, Plus } from "lucide-react"
+import { X, MapPin, ChevronRight, MessageSquare, Plus, Calendar } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 
@@ -11,6 +11,8 @@ interface ExpandableCardProps {
   title: string
   src: string
   description: string
+  details?: string
+  date?: string
   children?: React.ReactNode
   className?: string
   classNameExpanded?: string
@@ -21,6 +23,8 @@ export function ExpandableCard({
   title,
   src,
   description,
+  details,
+  date,
   children,
   className,
   classNameExpanded,
@@ -123,6 +127,22 @@ export function ExpandableCard({
                   {/* Content Section */}
                   <div className="flex flex-1 min-h-0 flex-col bg-white dark:bg-zinc-950">
                     <div className="flex-1 overflow-y-auto px-6 py-5 sm:px-8">
+                      {/* Title, Description & Date */}
+                      <div className="mb-5 flex flex-col gap-2 border-b border-zinc-100 pb-5 dark:border-zinc-800">
+                        <div className="flex items-center gap-2 text-xs text-zinc-400 dark:text-zinc-500">
+                          <Calendar className="h-3.5 w-3.5" />
+                          {date}
+                        </div>
+                        <h2 className="text-xl font-bold text-zinc-900 dark:text-white sm:text-2xl">
+                          {title}
+                        </h2>
+                        {details && (
+                          <p className="text-sm leading-relaxed text-zinc-600 dark:text-zinc-400">
+                            {details}
+                          </p>
+                        )}
+                      </div>
+
                       <motion.div
                         layout
                         initial={{ opacity: 0, y: 10 }}
