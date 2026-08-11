@@ -1,5 +1,10 @@
 import { Schema, model, models } from "mongoose";
 
+const CommentSchema= new Schema({
+    author : {type : String,required : true},
+    text :{type : String}
+},{timestamps : true})
+
 const ReportSchema = new Schema({
   userId: {
     type: Schema.Types.ObjectId,
@@ -20,10 +25,7 @@ const ReportSchema = new Schema({
   commentCount :{type : Number,default : 0},
   status : {type : String, enum : ['open','in-progress','resolved'] , default : 'open'},
   accessibilityFlag: { type: Boolean, default: false },
-  comments : [{
-    author : {type : String,required : true},
-    text :{type : String}
-  },{ timestamps: true }]
+  comments : [CommentSchema]
 },{ timestamps: true });
 
 export const Report= models.Report || model("Report",ReportSchema)

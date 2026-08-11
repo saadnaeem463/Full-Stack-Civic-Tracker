@@ -16,4 +16,4 @@ export const pusherClient =
         cluster: NEXT_PUBLIC_PUSHER_CLUSTER,
     }))
 
-export { REPORTS_CHANNEL, NEW_REPORT_EVENT } from "./pusher-events"
+export { REPORTS_CHANNEL, NEW_REPORT_EVENT,COMMENTS_CHANNEL,NEW_COMMENTS_EVENT } from "./pusher-events"

@@ -4,6 +4,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { verifyToken } from "@/lib/jwt";
 import { User } from "@/models/user";
+import {COMMENTS_CHANNEL,NEW_COMMENTS_EVENT} from "@/lib/pusher-events"
+import { pusherServer } from "@/lib/pusher";
 
 interface PayloadProps {
   comment: string;
@@ -33,7 +35,18 @@ export async function POST(req: NextRequest) {
     }
 
     findReport.comments.push({ text: payload.comment, author:user.name  });
+    findReport.commentCount++
     await findReport.save();
+
+    const newComment=findReport.comments[findReport.comments.length-1]
+    pusherServer
+    .trigger(COMMENTS_CHANNEL,NEW_COMMENTS_EVENT,{
+        _id : newComment._id,
+        author:newComment.author,
+        text:newComment.text,
+        createdAt:newComment.createdAt,
+        reportId: findReport._id
+    })
 
     return NextResponse.json({ payload: payload });
   } catch (err) {

@@ -5,3 +5,5 @@
 // browser-oriented setup code on the server too — not what we want.
 export const REPORTS_CHANNEL = "reports-channel"
 export const NEW_REPORT_EVENT = "new-report"
+export const COMMENTS_CHANNEL="comment-added"
+export const NEW_COMMENTS_EVENT="new-comment"

@@ -7,9 +7,9 @@ import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
+import { pusherClient,COMMENTS_CHANNEL,NEW_COMMENTS_EVENT } from "@/lib/pusher-client"
 import {
   ArrowBigUp,
-  ArrowBigDown,
   MessageCircle,
   Share2,
   MoreHorizontal,
@@ -60,51 +60,48 @@ const statusStyles = {
 }
 
 const DUMMY_COMMENTS: Comment[] = [
-  { id: "c1", author: "Amna R.", text: "Same issue on my street, been like this for a week. Really hope the authorities look into this soon.", time: "2 hours ago", likes: 4 },
-  { id: "c2", author: "Bilal K.", text: "Reported this to the ward office too. They said they'd send someone but nothing yet.", time: "5 hours ago", likes: 2 },
-  { id: "c3", author: "Sara M.", text: "This has been getting worse every day. Thanks for reporting it!", time: "1 day ago", likes: 8 },
+  { _id: "c1", author: "Amna R.", text: "Same issue on my street, been like this for a week. Really hope the authorities look into this soon.", time: "2 hours ago" },
+  { _id: "c2", author: "Bilal K.", text: "Reported this to the ward office too. They said they'd send someone but nothing yet.", time: "5 hours ago" },
+  { _id: "c3", author: "Sara M.", text: "This has been getting worse every day. Thanks for reporting it!", time: "1 day ago" },
 ]
 
 export function ReportMarker({ report }: { report: Report }) {
   const [comments, setComments] = useState<Comment[]>([])
-  const [errors,setErrors]=useState("")
+  const [errors, setErrors] = useState("")
   const [draft, setDraft] = useState("")
+  const [submitting, setSubmitting] = useState(false)
+  const [showInput, setShowInput] = useState(false)
   const markerRef = useRef<L.Marker>(null)
   const popupRef = useRef<HTMLDivElement>(null)
   const hoverTimeout = useRef<ReturnType<typeof setTimeout>>(null)
   const reportId=report._id
 
-  const handleAddComment =async () => {
+  const handleAddComment = async () => {
     const text = draft.trim()
-    const payload={
-      comment : text,
-      reportId
-    }
+    if (!text) return
 
+    const payload = { comment: text, reportId }
+
+    setSubmitting(true)
     try {
-        const response=await fetch('/api/reports/comment',{
-          method : 'POST',
-          headers : {"Content-Type" : "application/json"},
-          body : JSON.stringify(payload)
-        })
+      const response = await fetch("/api/reports/comment", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      })
 
-        if(!response.ok){
-          console.log('Erro while posting comment')
-          return
-        }
+      if (!response.ok) {
+        setErrors("Failed to post comment")
+        return
+      }
 
-        const data = await response.json()
-        console.log(data.payload)
+      setDraft("")
+      setShowInput(false)
     } catch (error) {
-      console.log(error)
+      setErrors("Something went wrong")
+    } finally {
+      setSubmitting(false)
     }
-    // console.log(text)
-    // if (!text) return
-    // setComments((prev) => [
-    //   ...prev,
-    //   { id: crypto.randomUUID(), author: "You", text, time: "Just now", likes: 0 },
-    // ])
-    // setDraft("")
   }
 
   useEffect(()=>{
@@ -124,6 +121,22 @@ export function ReportMarker({ report }: { report: Report }) {
       }
 
       getComments()
+  },[])
+
+  useEffect(()=>{
+      const channel=pusherClient.subscribe(COMMENTS_CHANNEL)
+      channel.bind(NEW_COMMENTS_EVENT,(newComment:Comment & {reportId:string})=>{
+      if(newComment.reportId!==report._id)return
+        setComments((prev)=>{
+          if(prev.some((r)=>r._id===newComment._id)) return prev
+          return [...prev,newComment]
+        })
+      })
+
+      return ()=>{
+        channel.unbind(NEW_COMMENTS_EVENT)
+        pusherClient.unsubscribe(COMMENTS_CHANNEL)
+      }
   },[])
 
   const openPopup = useCallback(() => {
@@ -207,61 +220,77 @@ export function ReportMarker({ report }: { report: Report }) {
             </div>
 
             {/* Comment Input */}
-            <div className="flex w-full items-start gap-3">
-              <Avatar className="h-8 w-8 shrink-0">
-                <AvatarFallback className="bg-emerald-100 text-xs font-semibold text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
-                  Y
-                </AvatarFallback>
-              </Avatar>
-              <div className="flex flex-1 flex-col gap-2">
-                <Input
-                  value={draft}
-                  onChange={(e) => setDraft(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && handleAddComment()}
-                  placeholder="Add a comment..."
-                  className="border-0 border-b border-zinc-200 bg-transparent px-0 text-sm shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 dark:border-zinc-800"
-                />
-                {draft.trim() && (
-                  <div className="flex items-center gap-2">
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => setDraft("")}
-                      className="h-7 rounded-full px-3 text-xs text-zinc-500 hover:text-zinc-700 dark:text-zinc-400"
-                    >
-                      Cancel
-                    </Button>
-                    <Button
-                      size="sm"
-                      onClick={handleAddComment}
-                      className="h-7 rounded-full bg-emerald-600 px-3 text-xs text-white hover:bg-emerald-700"
-                    >
-                      Comment
-                    </Button>
-                  </div>
-                )}
+            {!showInput ? (
+              <button
+                onClick={() => setShowInput(true)}
+                className="flex w-full items-center gap-3 rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2.5 text-sm text-zinc-500 transition-colors hover:bg-zinc-100 hover:text-zinc-700 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-200"
+              >
+                <Avatar className="h-6 w-6 shrink-0">
+                  <AvatarFallback className="bg-emerald-100 text-[10px] font-semibold text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
+                    Y
+                  </AvatarFallback>
+                </Avatar>
+                Add a comment...
+              </button>
+            ) : (
+              <div className="flex w-full items-start gap-3">
+                <Avatar className="h-8 w-8 shrink-0">
+                  <AvatarFallback className="bg-emerald-100 text-xs font-semibold text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
+                    Y
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex flex-1 flex-col gap-2">
+                  <Input
+                    autoFocus
+                    value={draft}
+                    onChange={(e) => setDraft(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleAddComment()}
+                    placeholder="Add a comment..."
+                    className="h-9 border-0 border-b border-zinc-200 bg-transparent px-0 text-sm shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 dark:border-zinc-800"
+                  />
+                  {draft.trim() && (
+                    <div className="flex items-center gap-2">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => { setDraft(""); setShowInput(false) }}
+                        className="h-7 rounded-full px-3 text-xs text-zinc-500 hover:text-zinc-700 dark:text-zinc-400"
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        size="sm"
+                        onClick={handleAddComment}
+                        disabled={submitting}
+                        className="h-7 rounded-full bg-emerald-600 px-3 text-xs text-white hover:bg-emerald-700 disabled:opacity-50"
+                      >
+                        {submitting ? "Posting..." : "Comment"}
+                      </Button>
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Comments List */}
-            <div className="flex w-full flex-col gap-1">
-              {comments.length>0 && comments.map((comment) => (
-                <div key={comment._id} className="group flex gap-3 rounded-lg py-3">
-                  <Avatar className="h-8 w-8 shrink-0">
-                    <AvatarFallback className="bg-zinc-200 text-xs font-semibold text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
+            <div className="flex w-full flex-col gap-0 divide-y divide-zinc-100 dark:divide-zinc-800">
+              {comments.length > 0 && comments.map((comment) => (
+                <div key={comment._id} className="group flex gap-3 py-3">
+                  <Avatar className="h-7 w-7 shrink-0">
+                    <AvatarFallback className="bg-zinc-200 text-[10px] font-semibold text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
                       {comment.author.charAt(0)}
                     </AvatarFallback>
                   </Avatar>
-                  <div className="flex flex-1 flex-col gap-1">
+                  <div className="flex flex-1 flex-col gap-0.5">
                     <div className="flex items-center gap-2">
                       <span className="text-xs font-semibold text-zinc-900 dark:text-white">
                         {comment.author}
                       </span>
-                      <span className="text-xs text-zinc-400 dark:text-zinc-500">
+                      <span className="text-[10px] text-zinc-400 dark:text-zinc-500">
                         {comment.time}
                       </span>
                     </div>
-                    <p className="text-sm leading-relaxed text-zinc-700 dark:text-zinc-300">
+                    <p className="text-[13px] leading-relaxed text-zinc-600 dark:text-zinc-300">
                       {comment.text}
                     </p>
                   </div>
