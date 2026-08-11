@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { pusherClient,COMMENTS_CHANNEL,NEW_COMMENTS_EVENT } from "@/lib/pusher-client"
+import { pusherClient,COMMENTS_CHANNEL,NEW_COMMENTS_EVENT,UPVOTE_CHANNEL,NEW_UPVOTE_EVENT } from "@/lib/pusher-client"
 import {
   ArrowBigUp,
   MessageCircle,
@@ -29,7 +29,7 @@ interface Report {
   createdAt: string
   media?: { url: string; type: string }[]
   status: "open" | "in-progress" | "resolved"
-  upvoteCount: number
+  upVoteCount: number
   commentCount: number
 }
 
@@ -59,11 +59,6 @@ const statusStyles = {
   "resolved": "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
 }
 
-const DUMMY_COMMENTS: Comment[] = [
-  { _id: "c1", author: "Amna R.", text: "Same issue on my street, been like this for a week. Really hope the authorities look into this soon.", time: "2 hours ago" },
-  { _id: "c2", author: "Bilal K.", text: "Reported this to the ward office too. They said they'd send someone but nothing yet.", time: "5 hours ago" },
-  { _id: "c3", author: "Sara M.", text: "This has been getting worse every day. Thanks for reporting it!", time: "1 day ago" },
-]
 
 export function ReportMarker({ report }: { report: Report }) {
   const [comments, setComments] = useState<Comment[]>([])
@@ -74,7 +69,27 @@ export function ReportMarker({ report }: { report: Report }) {
   const markerRef = useRef<L.Marker>(null)
   const popupRef = useRef<HTMLDivElement>(null)
   const hoverTimeout = useRef<ReturnType<typeof setTimeout>>(null)
+  const [upVoteCount,setUpVoteCount]=useState(report.upVoteCount?? 0)
+  const [hasVoted,setHasVoted]=useState(false)
   const reportId=report._id
+
+  const handleUpVote=async()=>{
+
+    try{
+      const res=await fetch(`/api/reports/upvote?reportId=${reportId}`,{
+        method : "PUT"
+      })
+
+      if (!res.ok){
+       setErrors("Failed To Upvote")
+       return
+      }
+        const data=await res.json()
+        setHasVoted(data.hasUpvoted)
+    }catch(error){
+      setErrors("Erro while upvoting : ",error)
+    }
+  }
 
   const handleAddComment = async () => {
     const text = draft.trim()
@@ -139,6 +154,38 @@ export function ReportMarker({ report }: { report: Report }) {
       }
   },[])
 
+  useEffect(()=>{
+    const getUpvotedStatus=async()=>{
+      try{
+        const res=await fetch(`/api/reports/upvote?reportId=${report._id}`,{
+          method : "GET",
+          headers : {"Content-Type": "application/json"}
+        })
+
+      const data=await res.json()
+      setHasVoted(data.hasUpvoted)
+      setUpVoteCount(data.upVoteCount)
+
+      }catch(error){
+        setErrors(error)
+      }
+
+    }
+    getUpvotedStatus()
+  },[])
+
+  useEffect(()=>{
+    const channel=pusherClient.subscribe(UPVOTE_CHANNEL)
+    channel.bind(NEW_UPVOTE_EVENT,(data : {reportId : string,upVoteCount :number})=>{
+      if(data.reportId!==report._id) return
+      setUpVoteCount(data.upVoteCount)
+    })
+    return()=>{
+      channel.unbind(NEW_UPVOTE_EVENT)
+      pusherClient.unsubscribe(UPVOTE_CHANNEL)
+    }
+  },[])
+
   const openPopup = useCallback(() => {
     if (hoverTimeout.current) clearTimeout(hoverTimeout.current)
     markerRef.current?.openPopup()
@@ -192,10 +239,19 @@ export function ReportMarker({ report }: { report: Report }) {
                 </Badge>
               </div>
               <div className="flex items-center gap-1">
-                <button className="flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium text-zinc-600 transition-colors hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800">
-                  <ArrowBigUp className="h-4 w-4" />
-                  {report.upvoteCount}
-                </button>
+              <button
+                type="button"
+                onClick={handleUpVote}
+                className={cn(
+                  "flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium transition-colors",
+                  hasVoted
+                    ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400"
+                    : "text-zinc-600 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800"
+                )}
+              >
+                <ArrowBigUp className={cn("h-4 w-4", hasVoted && "fill-emerald-600 dark:fill-emerald-400")} />
+                {upVoteCount}
+              </button>
                 <button className="flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium text-zinc-600 transition-colors hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800">
                   <Share2 className="h-3.5 w-3.5" />
                 </button>

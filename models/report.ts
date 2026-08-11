@@ -21,7 +21,7 @@ const ReportSchema = new Schema({
     type : {type : String,required: true}
   }],
   location : {type : String,required : true},
-  upVoteCount : {type : Number,default : 0},
+  upVotedBy : [{type : Schema.Types.ObjectId,ref : "User"}],
   commentCount :{type : Number,default : 0},
   status : {type : String, enum : ['open','in-progress','resolved'] , default : 'open'},
   accessibilityFlag: { type: Boolean, default: false },
