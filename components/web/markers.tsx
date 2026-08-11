@@ -1,6 +1,6 @@
 // components/web/report-marker.tsx
 "use client"
-import { useState, useRef, useCallback } from "react"
+import { useState, useRef, useCallback, useEffect } from "react"
 import { Marker, Popup } from "react-leaflet"
 import { ExpandableCard } from "@/components/ui/expandable-card"
 import { Badge } from "@/components/ui/badge"
@@ -34,11 +34,10 @@ interface Report {
 }
 
 interface Comment {
-  id: string
+  _id: string
   author: string
   text: string
   time: string
-  likes: number
 }
 
 const PLACEHOLDER_IMAGE = "/file.svg"
@@ -67,7 +66,8 @@ const DUMMY_COMMENTS: Comment[] = [
 ]
 
 export function ReportMarker({ report }: { report: Report }) {
-  const [comments, setComments] = useState<Comment[]>(DUMMY_COMMENTS)
+  const [comments, setComments] = useState<Comment[]>([])
+  const [errors,setErrors]=useState("")
   const [draft, setDraft] = useState("")
   const markerRef = useRef<L.Marker>(null)
   const popupRef = useRef<HTMLDivElement>(null)
@@ -106,6 +106,25 @@ export function ReportMarker({ report }: { report: Report }) {
     // ])
     // setDraft("")
   }
+
+  useEffect(()=>{
+      const getComments=async()=>{
+          try{
+            const res=await fetch(`/api/reports/comment?reportId=${report._id}`,{
+              method : "GET",
+            })
+
+          const data=await res.json()
+          console.log(data.data)
+          setComments(data.data ?? [])
+
+          }catch(error){
+            setErrors(error)
+          }
+      }
+
+      getComments()
+  },[])
 
   const openPopup = useCallback(() => {
     if (hoverTimeout.current) clearTimeout(hoverTimeout.current)
@@ -178,7 +197,7 @@ export function ReportMarker({ report }: { report: Report }) {
               <div className="flex items-center gap-2">
                 <MessageCircle className="h-4 w-4 text-zinc-500 dark:text-zinc-400" />
                 <span className="text-sm font-semibold text-zinc-900 dark:text-white">
-                  {comments.length} Comments
+                  {comments.length || 0} Comments
                 </span>
               </div>
               <button className="flex items-center gap-1 text-xs font-medium text-zinc-500 transition-colors hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200">
@@ -226,8 +245,8 @@ export function ReportMarker({ report }: { report: Report }) {
 
             {/* Comments List */}
             <div className="flex w-full flex-col gap-1">
-              {comments.map((comment) => (
-                <div key={comment.id} className="group flex gap-3 rounded-lg py-3">
+              {comments.length>0 && comments.map((comment) => (
+                <div key={comment._id} className="group flex gap-3 rounded-lg py-3">
                   <Avatar className="h-8 w-8 shrink-0">
                     <AvatarFallback className="bg-zinc-200 text-xs font-semibold text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
                       {comment.author.charAt(0)}
@@ -245,19 +264,6 @@ export function ReportMarker({ report }: { report: Report }) {
                     <p className="text-sm leading-relaxed text-zinc-700 dark:text-zinc-300">
                       {comment.text}
                     </p>
-                    <div className="mt-1 flex items-center gap-1">
-                      <button className="flex items-center gap-1 rounded-full px-2 py-0.5 text-xs text-zinc-500 transition-colors hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800">
-                        <ThumbsUp className="h-3 w-3" />
-                        {comment.likes > 0 && comment.likes}
-                      </button>
-                      <button className="flex items-center gap-1 rounded-full px-2 py-0.5 text-xs text-zinc-500 transition-colors hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800">
-                        <ArrowBigDown className="h-3 w-3" />
-                      </button>
-                      <button className="flex items-center gap-1 rounded-full px-2 py-0.5 text-xs text-zinc-500 transition-colors hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800">
-                        <Reply className="h-3 w-3" />
-                        Reply
-                      </button>
-                    </div>
                   </div>
                 </div>
               ))}

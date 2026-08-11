@@ -3,6 +3,7 @@ import { Report } from "@/models/report";
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { verifyToken } from "@/lib/jwt";
+import { User } from "@/models/user";
 
 interface PayloadProps {
   comment: string;
@@ -26,12 +27,38 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Report Doesn't Exist" }, { status: 404 });
     }
 
-    findReport.comments.push({ comment: payload.comment, postUserId: decode.userId });
+    const user=await User.findById(decode.userId)
+    if(!user){
+      return NextResponse.json({ error: "User doesn't exists" }, { status: 404 });
+    }
+
+    findReport.comments.push({ text: payload.comment, author:user.name  });
     await findReport.save();
 
     return NextResponse.json({ payload: payload });
   } catch (err) {
     console.error("Error ", err);
     return NextResponse.json({ error: "failed to post comment" }, { status: 401 });
+  }
+}
+
+export async function GET(req:NextRequest){
+  try{
+      const { searchParams } = new URL(req.url)
+      const id = searchParams.get("reportId")
+      if(!id){
+        return NextResponse.json({error : "reportId is required"},{status : 400})
+      }
+
+      await connectDB()
+      const report=await Report.findById(id)
+      if(!report){
+        return NextResponse.json({error : "Report doesn't exist"},{status : 404})
+      }
+
+      return NextResponse.json({data : report.comments})
+  }catch(err){
+    console.error(err)
+    return NextResponse.json({error : "Error while fetching comments"},{status : 500})
   }
 }

@@ -21,13 +21,9 @@ const ReportSchema = new Schema({
   status : {type : String, enum : ['open','in-progress','resolved'] , default : 'open'},
   accessibilityFlag: { type: Boolean, default: false },
   comments : [{
-    postUserId : {
-      type : Schema.Types.ObjectId,
-      ref : "User",
-      required : true
-    },
-    comment :{type : String}
-  }]
+    author : {type : String,required : true},
+    text :{type : String}
+  },{ timestamps: true }]
 },{ timestamps: true });
 
 export const Report= models.Report || model("Report",ReportSchema)

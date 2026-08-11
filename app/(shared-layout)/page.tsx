@@ -26,6 +26,7 @@ export default function Home() {
         if (!res.ok) throw new Error("Failed to fetch reports");
         const data = await res.json();
         setReports(data.reports);
+        console.log(data.reports)
       } catch (error) {
         console.error("Error:", error);
       }
