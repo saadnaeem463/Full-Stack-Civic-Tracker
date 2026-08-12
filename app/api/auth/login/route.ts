@@ -37,7 +37,7 @@ export async function POST(request:Request){
             )
         }
 
-    const token = signInToken({ userId: findUser._id.toString(), email: findUser.email });
+    const token = signInToken({ userId: findUser._id.toString(), email: findUser.email,role: findUser.role });
 
     const cookieStore = await cookies();
     cookieStore.set("token", token, {

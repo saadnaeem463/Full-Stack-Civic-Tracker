@@ -5,6 +5,16 @@ const CommentSchema= new Schema({
     text :{type : String}
 },{timestamps : true})
 
+const InternalNoteSchema= new Schema({
+    author : {type : String,required : true},
+    text :{type : String}
+},{timestamps : true})
+
+const HistorySchema=new Schema({
+  status : {type : String,enum : ['open','acknowledged','in-progress','resolved'], required : true },
+  by : {type : String, required : true}
+},{timestamps : true})
+
 const ReportSchema = new Schema({
   userId: {
     type: Schema.Types.ObjectId,
@@ -24,9 +34,15 @@ const ReportSchema = new Schema({
   location : {type : String,required : true},
   upVotedBy : [{type : Schema.Types.ObjectId,ref : "User"}],
   commentCount :{type : Number,default : 0},
-  status : {type : String, enum : ['open','in-progress','resolved'] , default : 'open'},
+  status : {type : String, enum : ['open','acknowledged','in-progress','resolved']},
   accessibilityFlag: { type: Boolean, default: false },
-  comments : [CommentSchema]
+  comments : [CommentSchema],
+
+  //admin fields hn hamari yahan
+  assignedTo  :{type : Schema.Types.ObjectId, ref : "Workers",default : null},
+  suspicious : {type : Boolean,default : false},
+  internalNotes : [InternalNoteSchema],
+  history : [HistorySchema]
 },{ timestamps: true });
 
 export const Report= models.Report || model("Report",ReportSchema)

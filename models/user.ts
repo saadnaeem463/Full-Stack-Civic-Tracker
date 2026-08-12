@@ -6,7 +6,7 @@ const UserSchema = new Schema({
   isVerified : {type : Boolean,default : false},
   verificationToken : {type : String},
   verificationTokenExpiry : {type : Date},
-  
+  role : {type: String,enum : ["citizen","admin"],default : "citizen"}
 }, { timestamps: true });
 
 export const User = models.User || model("User", UserSchema);
