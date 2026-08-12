@@ -11,6 +11,7 @@ import { Avatar } from "@base-ui/react"
 import AddReport from "./add-report"
 
 
+
 export function Navbar() {
 
     const [user,setUser]=useState<User | null>(null)
@@ -49,7 +50,7 @@ export function Navbar() {
           <nav className="hidden items-center gap-1 md:flex" aria-label="Primary navigation">
             <a className="rounded-lg bg-[#e9f0e9] px-3 py-2 text-sm font-semibold text-[#1e5b3e]" href="#map">Explore map</a>
             <button className="rounded-lg px-3 py-2 text-sm font-medium text-[#425047] hover:bg-[#f0f3ee]">Report an issue</button>
-            <button className="rounded-lg px-3 py-2 text-sm font-medium text-[#425047] hover:bg-[#f0f3ee]">How it works</button>
+            <Link href={'/how-it-works'} className="rounded-lg px-3 py-2 text-sm font-medium text-[#425047] hover:bg-[#f0f3ee]">How it works</Link>
           </nav>
           <div className="flex items-center gap-2">
             {loading ? null : user ? (

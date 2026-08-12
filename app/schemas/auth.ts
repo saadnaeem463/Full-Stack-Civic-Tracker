@@ -22,6 +22,7 @@ export const reportForm = z.object({
     z.object({
       url: z.string(),
       type: z.string(),
+      poster: z.string().optional(),
     })
   ),
   accessibilityFlag: z.boolean(),

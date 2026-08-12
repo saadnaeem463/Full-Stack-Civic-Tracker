@@ -3,13 +3,16 @@
 import * as React from "react"
 import { createPortal } from "react-dom"
 import { AnimatePresence, motion } from "motion/react"
-import { X, MapPin, ChevronRight, MessageSquare, Plus, Calendar } from "lucide-react"
+import { X, MapPin, ChevronRight, MessageSquare, Plus, Calendar, Play } from "lucide-react"
+// add near other imports
+import { MediaCarousel, type MediaItem } from "@/components/ui/media-carousel"
 
 import { cn } from "@/lib/utils"
 
 interface ExpandableCardProps {
   title: string
-  src: string
+  src: string          // still used for the compact hover-card thumbnail
+  media?: MediaItem[]  // new — used for the expanded carousel
   description: string
   details?: string
   date?: string
@@ -22,6 +25,7 @@ interface ExpandableCardProps {
 export function ExpandableCard({
   title,
   src,
+  media,
   description,
   details,
   date,
@@ -88,13 +92,21 @@ export function ExpandableCard({
                   {/* Image Section */}
                   <div className="relative shrink-0">
                     <motion.div layoutId={`image-${title}-${id}`}>
-                      <img
-                        src={src}
-                        alt={title}
-                        className="h-72 w-full object-cover object-center sm:h-80"
-                      />
+                      {media && media.length > 0 ? (
+                        <MediaCarousel
+                          media={media}
+                          alt={title}
+                          className="h-72 sm:h-80"
+                        />
+                      ) : (
+                        <img
+                          src={src}
+                          alt={title}
+                          className="h-72 w-full object-cover object-center sm:h-80"
+                        />
+                      )}
                     </motion.div>
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent pointer-events-none" />
 
                     {/* Close Button */}
                     <motion.button
@@ -176,11 +188,26 @@ export function ExpandableCard({
       >
         <div className="relative overflow-hidden">
           <motion.div layoutId={`image-${title}-${id}`}>
-            <img
-              src={src}
-              alt={title}
-              className="h-44 w-full object-cover object-center transition-transform duration-500 group-hover:scale-105"
-            />
+            {media && media.length > 0 && media[0].type.startsWith("video") ? (
+              <div className="relative h-44 w-full">
+                <img
+                  src={media[0].poster || src}
+                  alt={title}
+                  className="h-full w-full object-cover object-center transition-transform duration-500 group-hover:scale-105"
+                />
+                <div className="absolute inset-0 flex items-center justify-center bg-black/10">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-black/50 text-white backdrop-blur-sm">
+                    <Play className="h-4 w-4 ml-0.5" fill="white" />
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <img
+                src={src}
+                alt={title}
+                className="h-44 w-full object-cover object-center transition-transform duration-500 group-hover:scale-105"
+              />
+            )}
           </motion.div>
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
           <motion.button

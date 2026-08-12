@@ -18,7 +18,8 @@ const ReportSchema = new Schema({
   lng : {type : Number},
   media: [{
     url : {type : String,required: true},
-    type : {type : String,required: true}
+    type : {type : String,required: true},
+    poster : {type : String}
   }],
   location : {type : String,required : true},
   upVotedBy : [{type : Schema.Types.ObjectId,ref : "User"}],

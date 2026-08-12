@@ -27,7 +27,7 @@ interface Report {
   details?: string
   location: string
   createdAt: string
-  media?: { url: string; type: string }[]
+  media?: { url: string; type: string; poster?: string }[]
   status: "open" | "in-progress" | "resolved"
   upVoteCount: number
   commentCount: number
@@ -225,11 +225,12 @@ export function ReportMarker({ report }: { report: Report }) {
           onMouseLeave={closePopup}
         >
           <ExpandableCard
-            title={report.title}
-            description={report.location}
-            src={report.media?.[0]?.url ?? PLACEHOLDER_IMAGE}
-            details={report.details}
-            date={formatDate(report.createdAt)}
+          title={report.title}
+          description={report.location}
+          src={report.media?.[0]?.url ?? PLACEHOLDER_IMAGE}
+          media={report.media}
+          details={report.details}
+          date={formatDate(report.createdAt)}
           >
             {/* Status & Actions Bar */}
             <div className="flex w-full items-center justify-between">
