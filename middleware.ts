@@ -11,14 +11,17 @@ export function middleware(request: NextRequest) {
   }
 
   try {
-    verifyToken(token);
+    const decoded=verifyToken(token);
+    if(request.nextUrl.pathname.startsWith("/admin") && decoded.role!=='admin'){
+        return NextResponse.redirect(new URL("/", request.url));
+    }
     return NextResponse.next();
   } catch(err) {
   console.log("Token verification failed:", err);
-    return NextResponse.redirect(new URL("/auth/login", request.url));;
+    return NextResponse.redirect(new URL("/auth/login", request.url));
   }
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*"], // protect these routes
+  matcher: ["/dashboard/:path*","/api/admin/:path*"], // protect these routes
 };

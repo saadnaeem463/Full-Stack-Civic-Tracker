@@ -9,3 +9,4 @@ export const COMMENTS_CHANNEL="comment-added"
 export const NEW_COMMENTS_EVENT="new-comment"
 export const UPVOTE_CHANNEL='upvote-channel'
 export const NEW_UPVOTE_EVENT='upvote-added'
+export const REPORT_UPDATED_EVENT='report-updated'

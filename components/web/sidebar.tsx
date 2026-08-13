@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/sidebar"
 import { getMe } from "@/lib/services/auth.services"
 import type { User } from "@/types/user"
-
+import { useRouter } from "next/navigation"
 const navItems = [
   { label: "Dashboard", Icon: LayoutDashboardIcon },
   { label: "Reports", Icon: ClipboardListIcon },
@@ -34,6 +34,7 @@ const navItems = [
 
 export function AppSidebar() {
   const [user, setUser] = useState<User | null>(null)
+  const router=useRouter()
 
   useEffect(() => {
     getMe().then((res) => setUser(res.user)).catch(() => {})
@@ -69,6 +70,7 @@ export function AppSidebar() {
                   <SidebarMenuItem key={label}>
                     <SidebarMenuButton
                       isActive={active}
+                      onClick={() => router.push(`/${label}`)}
                       className={`gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold transition-colors ${
                         active
                           ? "bg-[#1e5b3e] text-white hover:bg-[#1e5b3e] hover:text-white data-[active=true]:bg-[#1e5b3e] data-[active=true]:text-white"

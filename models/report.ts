@@ -11,7 +11,7 @@ const InternalNoteSchema= new Schema({
 },{timestamps : true})
 
 const HistorySchema=new Schema({
-  status : {type : String,enum : ['open','acknowledged','in-progress','resolved'], required : true },
+  status : {type : String,enum : ['Reported','Acknowledged','In progress','Resolved'], required : true },
   by : {type : String, required : true}
 },{timestamps : true})
 
@@ -34,7 +34,7 @@ const ReportSchema = new Schema({
   location : {type : String,required : true},
   upVotedBy : [{type : Schema.Types.ObjectId,ref : "User"}],
   commentCount :{type : Number,default : 0},
-  status : {type : String, enum : ['open','acknowledged','in-progress','resolved']},
+  status : {type : String, enum : ['Reported','Acknowledged','In progress','Resolved']},
   accessibilityFlag: { type: Boolean, default: false },
   comments : [CommentSchema],
 
