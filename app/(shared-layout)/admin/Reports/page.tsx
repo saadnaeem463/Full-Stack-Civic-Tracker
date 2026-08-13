@@ -1,12 +1,5 @@
-import { Reports } from '@/components/web/admin/Reports'
-import React from 'react'
+import { ReportPanel } from '@/components/web/admin/ReportPanel'
 
-const page = () => {
-  return (
-    <div>
-        <Reports />
-    </div>
-  )
+export default function ReportsPage() {
+  return <ReportPanel />
 }
-
-export default page

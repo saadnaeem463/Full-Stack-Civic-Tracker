@@ -1,7 +1,7 @@
 import React from "react";
 import { ArrowUpRightIcon, InboxIcon } from "lucide-react";
-import { PageHeading, SectionCard, EmptyState } from "../components/admin/AdminShell";
-import { StatusBadge } from "../components/admin/StatusBadge";
+import { PageHeading, SectionCard, EmptyState } from "./AdminShell";
+import { StatusBadge } from "./StatusBadge";
 import { Report, ReportCategory, ReportStatus, budgetCategories, workers } from "../data/adminData";
 
 const statusOrder: ReportStatus[] = ["Reported", "Acknowledged", "In progress", "Resolved"];

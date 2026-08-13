@@ -17,7 +17,7 @@ export async function POST(req:NextRequest){
     await connectDB()
     const report=await Report.findById(reportId)
 
-    if(report){
+    if(!report){
         return NextResponse.json({error : "Report doesn't exists"},{status : 404})
     }
 

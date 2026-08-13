@@ -27,7 +27,7 @@ export async function PATCH(request:NextRequest){
             return NextResponse.json({error : "No match report found"},{status : 404})
         }
 
-        for (const report in reports){
+        for (const report of reports){
             report.status=status
             report.history.push({status,by : admin.email})
             await report.save()

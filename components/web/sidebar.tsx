@@ -22,7 +22,8 @@ import {
 } from "@/components/ui/sidebar"
 import { getMe } from "@/lib/services/auth.services"
 import type { User } from "@/types/user"
-import { useRouter } from "next/navigation"
+import { useRouter, usePathname } from "next/navigation"
+
 const navItems = [
   { label: "Dashboard", Icon: LayoutDashboardIcon },
   { label: "Reports", Icon: ClipboardListIcon },
@@ -34,7 +35,8 @@ const navItems = [
 
 export function AppSidebar() {
   const [user, setUser] = useState<User | null>(null)
-  const router=useRouter()
+  const router = useRouter()
+  const pathname = usePathname()
 
   useEffect(() => {
     getMe().then((res) => setUser(res.user)).catch(() => {})
@@ -64,13 +66,14 @@ export function AppSidebar() {
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
-              {navItems.map(({ label, Icon }, i) => {
-                const active = i === 0
+              {navItems.map(({ label, Icon }) => {
+                const slug = label.toLowerCase()
+                const active = pathname === `/admin/${slug}`
                 return (
                   <SidebarMenuItem key={label}>
                     <SidebarMenuButton
                       isActive={active}
-                      onClick={() => router.push(`/${label}`)}
+                      onClick={() => router.push(`/admin/${slug}`)}
                       className={`gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold transition-colors ${
                         active
                           ? "bg-[#1e5b3e] text-white hover:bg-[#1e5b3e] hover:text-white data-[active=true]:bg-[#1e5b3e] data-[active=true]:text-white"
@@ -96,7 +99,10 @@ export function AppSidebar() {
           <p className="mt-1.5 text-sm leading-5 text-[#3f5546]">
             2 open reports breach their response window today.
           </p>
-          <button className="mt-3 w-full rounded-lg bg-[#1e5b3e] py-2 text-xs font-bold text-white hover:bg-[#174a32]">
+          <button
+            onClick={() => router.push("/admin/reports")}
+            className="mt-3 w-full rounded-lg bg-[#1e5b3e] py-2 text-xs font-bold text-white hover:bg-[#174a32]"
+          >
             Review queue
           </button>
         </div>
