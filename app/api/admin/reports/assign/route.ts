@@ -25,7 +25,7 @@ export async function PATCH(req:NextRequest){
         if(report.assignedTo){
             await Workers.findByIdAndUpdate(report.assignedTo,{
                 currentReport :null,
-                status : "free"
+                status : "Free"
             })
         }
 
@@ -38,7 +38,7 @@ export async function PATCH(req:NextRequest){
         }
 
         worker.currentReport=report._id
-        worker.status="busy"
+        worker.status="Busy"
         await worker.save()
 
         report.assignedTo=workerId || null

@@ -46,7 +46,12 @@ export function adaptWorker(dbWorker: any) : WorkerUI{
     return{
         id : dbWorker._id,
         name : dbWorker.fullname,
-        initials : dbWorker.fullname.split("").map((n:string)=>n[0]).join("").toUpperCase(),
+        initials: dbWorker.fullname
+        .trim()
+        .split(/\s+/)
+        .map((n: string) => n[0])
+        .join("")
+        .toUpperCase(),
         specialty : dbWorker.specialty,
         status : dbWorker.status,
         currentReport : dbWorker.currentReport ?? null,

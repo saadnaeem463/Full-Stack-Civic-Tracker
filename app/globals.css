@@ -1,6 +1,10 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&display=swap');
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
+
+body { background: #f7f8f4; color: #17211b; font-family: 'DM Sans', sans-serif; }
+.font-display { font-family: 'Newsreader', Georgia, serif; }
 
 @custom-variant dark (&:is(.dark *));
 
