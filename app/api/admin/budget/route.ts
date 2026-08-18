@@ -14,3 +14,13 @@ export async function GET(req:NextRequest){
         return NextResponse.json({error : "Error while fetching expenses"},{status : 400})
     }
 }
+
+export async function POST(req:NextRequest){
+    try {
+        const payload=await req.json()
+        console.log(payload)
+        return NextResponse.json({payload},{status : 202})
+    } catch (error) {
+        return NextResponse.json({error : "Error while fetching expenses"},{status : 400})
+    }
+}

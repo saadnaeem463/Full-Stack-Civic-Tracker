@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { FlagIcon, ImageIcon, MapPinIcon, XIcon } from "lucide-react";
 import { StatusBadge } from "./StatusBadge";
 import { Report, ReportStatus, Worker } from "@/data/adminData";
+import AddExpense from "../add-expense";
 
 const statuses: ReportStatus[] = ["Reported", "Acknowledged", "In progress", "Resolved"];
 
@@ -143,6 +144,7 @@ export function ReportDetailsDrawer({ report, workers, onClose, onStatusChange, 
           <button onClick={() => setFlagOpen(true)} className="inline-flex items-center gap-2 rounded-lg border border-[#e8d3d1] px-3 py-2 text-xs font-bold text-[#a4544f] hover:bg-[#fbf1f0]">
             <FlagIcon size={14} /> {report.suspicious ? "Update fake report flag" : "Flag as fake report"}
           </button>
+          <AddExpense reportId={report.id} label={report.title} category={report.category} />
         </div>
 
         {flagOpen && (
@@ -170,6 +172,7 @@ export function ReportDetailsDrawer({ report, workers, onClose, onStatusChange, 
                 >
                   Confirm flag
                 </button>
+        
               </div>
             </div>
           </div>
