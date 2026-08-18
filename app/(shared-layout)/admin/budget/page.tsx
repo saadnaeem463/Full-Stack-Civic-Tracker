@@ -1,5 +1,5 @@
 "use client"
-import React, { useState } from 'react'
+import React, { useState,useEffect } from 'react'
 
 
 // interface ExpenseProp {
@@ -18,7 +18,7 @@ const BudgetPage = () => {
         setExpenses(data.expenses)
         console.log(data.expenses)
     }
-    useEfect(()=>{
+    useEffect(()=>{
         fetchExpenses()
     },[])
 
@@ -30,7 +30,4 @@ const BudgetPage = () => {
 }
 
 export default BudgetPage
-function useEfect(arg0: () => void, arg1: never[]) {
-    throw new Error('Function not implemented.')
-}
 
