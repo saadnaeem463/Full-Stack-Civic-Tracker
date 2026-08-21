@@ -10,9 +10,10 @@ import { Controller, useForm } from 'react-hook-form'
 import {z} from 'zod'
 import { loginUser} from '@/lib/services/auth.services'
 import { useRouter } from 'next/navigation'
+import { useState } from 'react'
 
-export default function SignUp(){
-
+export default function Login(){
+    const [error,setErrors]=useState("")
     const router= useRouter()
     const form=useForm({
         resolver : zodResolver(LoginSchema), //this line says whenever you need to validate, run the values through SignupSchema and report back errors
@@ -25,19 +26,26 @@ export default function SignUp(){
    async function onsubmit(data : z.infer<typeof LoginSchema>){
         try {
             const result=await loginUser(data)
-
-            console.log("Sign up : ",result)
+            
+            if(!result.user){
+                setErrors('Invalid Email or password')
+                return
+            }
+            
             router.push("/")
         } catch (error) {
-            console.error("Signup failed : ",error)
+            console.error("Login failed : ",error)
         }
     }
 
   return (
     <Card>
+        {error && error.length>0 && 
+            <p>{error}</p>
+            }
         <CardHeader>
-            <CardTitle>Sign up </CardTitle>
-            <CardDescription>Register Your Fking account here :D </CardDescription>
+            <CardTitle>Login</CardTitle>
+            <CardDescription>Welcome back! Sign in to your account.</CardDescription>
         </CardHeader>
 
         <CardContent>

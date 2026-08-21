@@ -2,15 +2,16 @@
 import React, { useState,useEffect } from 'react'
 
 
-// interface ExpenseProp {
-//     reportId : string,
-//     label : string,
-//     category : string,
-//     amount : number
-// }
-const BudgetPage = () => {
+interface ExpenseProp {
+    _id: string,
+    reportId : string,
+    label : string,
+    category : string,
+    amount : number
+}
+export default function BudgetPage() {
 
-    const [expenses,setExpenses]=useState([])
+    const [expenses,setExpenses]=useState<ExpenseProp[]>([])
 
     const fetchExpenses=async()=>{
         const res=await fetch(`/api/admin/budget`)
@@ -25,9 +26,16 @@ const BudgetPage = () => {
   return (
     <div>
         This is budget Page!!
+        {expenses.length > 0 && <>
+        {expenses.map((exp)=>(
+            <div key={exp._id}>
+                {exp.amount}
+            </div>
+        ))}
+        </>}
     </div>
   )
 }
 
-export default BudgetPage
+// export default BudgetPage
 

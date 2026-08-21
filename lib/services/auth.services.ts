@@ -35,7 +35,7 @@ export async function loginUser(data : z.infer<typeof LoginSchema>){
             const result=await response.json()
             
             if(!response.ok){
-                throw new Error(result.error || "Sginup failed")
+                return Response.json({error : "Invalid Email or password"},{status : 409})
             }
 
             return result

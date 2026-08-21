@@ -6,7 +6,8 @@ const CategoryBudgetSchema = new Schema({
     enum: ["Roads crew", "Electrical", "Sanitation", "Parks"],
     required: true,
   },
-  allocated: { type: Number, required: true }, // e.g. 50000
+  allocated: { type: Number, required: true ,default : 0 },
+  spend: {type : Number,required : true ,default : 0} // e.g. 50000
 }, { timestamps: true })
 
 CategoryBudgetSchema.index({ category: 1, period: 1 }, { unique: true })

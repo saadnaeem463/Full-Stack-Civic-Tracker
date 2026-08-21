@@ -20,19 +20,18 @@ export function Navbar() {
     const router=useRouter()
 
   useEffect(()=>{
-    try {
-        const getUser=async()=>{
-          const response=await getMe()
-          setUser(response.user)
-          console.log(response.user)
-        }
-  
-        getUser()
-    } catch (error) {
+    const getUser=async()=>{
+      try {
+        const response=await getMe()
+        setUser(response.user)
+      } catch (error) {
         console.log(error)
-    } finally {
-      setLoading(false);
+      } finally {
+        setLoading(false);
+      }
     }
+
+    getUser()
   },[])
 
   async function handleLogout(){

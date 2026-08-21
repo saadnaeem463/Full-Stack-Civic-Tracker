@@ -18,7 +18,12 @@ const AddExpense = ({ reportId, label, category }: { reportId: string, label: st
         e.preventDefault();
         const formData = new FormData(e.currentTarget)
 
-        const payload = { amount: formData.get("amount") };
+        const payload = {
+            amount: formData.get("amount"),
+            reportId,
+            label,
+            category
+        };
 
         setSubmitting(true);
         try {
@@ -29,8 +34,9 @@ const AddExpense = ({ reportId, label, category }: { reportId: string, label: st
             });
             const data = await res.json();
 
-            if (res.ok) {
+            if (!res.ok) {
                 console.log("Request failed!")
+                return 
             }
 
             console.log(data.payload)

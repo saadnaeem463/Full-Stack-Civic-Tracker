@@ -53,7 +53,7 @@ export async function POST(request:Request){
 export async function GET(){
     try{
         await connectDB()
-        const reports=await Report.find()
+        const reports=await Report.find().populate("userId", "name")
         if(!reports){
             return Response.json({error :"No reports found"},{status : 400})
         }

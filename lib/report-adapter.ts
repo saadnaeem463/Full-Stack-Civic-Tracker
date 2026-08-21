@@ -14,7 +14,7 @@ export function adaptReport(dbReport : any) : ReportUI{
         address: dbReport.location,
         neighborhood  :"",
         reporter : dbReport.userId?.name ?? "Unknown",
-        upvotes : dbReport.upVotedB?.length ?? 0,
+        upvotes : dbReport.upVotedBy?.length ?? 0,
         date : new Date(dbReport.createdAt).toISOString().slice(0,10),
         createdLabel : formatLabel(dbReport.createdAt),
         assignedTo : dbReport.assignedTo ?? null,

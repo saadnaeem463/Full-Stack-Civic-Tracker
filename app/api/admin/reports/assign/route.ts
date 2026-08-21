@@ -47,6 +47,8 @@ export async function PATCH(req:NextRequest){
         pusherServer
         .trigger(REPORTS_CHANNEL,NEW_REPORT_EVENT,{reportId,workerId})
         .catch((err)=>console.log("Pusher Trigger Failed : ",err))
+
+        return NextResponse.json({ message: "Worker assigned successfully", report }, { status: 200 })
     }catch(error){
         console.error("Worker update failed:", error)
         return NextResponse.json({ error: "Failed to update Workers" }, { status: 500 })
