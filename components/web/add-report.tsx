@@ -203,10 +203,10 @@ const AddReport = () => {
                 className="flex h-10 w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 ring-offset-white placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-teal-600/20 focus-visible:ring-teal-600 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:ring-offset-zinc-900 dark:placeholder:text-zinc-500 dark:focus-visible:ring-cyan-500"
               >
                 <option value="">Choose a category</option>
-                <option value="roads">Roads</option>
-                <option value="lighting">Lighting</option>
-                <option value="cleanliness">Cleanliness</option>
-                <option value="parks">Parks</option>
+                <option value="Roads">Roads</option>
+                <option value="Lighting">Lighting</option>
+                <option value="Cleanliness">Cleanliness</option>
+                <option value="Parks">Parks</option>
               </select>
             </div>
             <div className="grid gap-2">

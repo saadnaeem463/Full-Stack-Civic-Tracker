@@ -7,71 +7,47 @@ import {
     DialogContent,
     DialogHeader,
     DialogDescription,
-    DialogTitle,
     DialogFooter,
 } from "@/components/ui/dialog";
 
-const AddExpense = ({ reportId, label, category }: { reportId: string, label: string, category: string }) => {
+const BudgetAllocation = ({handleSetBudget} : {handleSetBudget :(amount : number)=>void}) => {
     const [submitting, setSubmitting] = useState(false);
-    const [catBudget,setCatBudget]=useState(0)
-    const [errors,setErrors]=useState("")
-    const [open, setOpen] = useState(false);
+    const [error,setError]=useState("")
 
-    const fetchBudget=async()=>{
-        try {
-            const response=await fetch(`/api/admin/budget/category?category=${category}`)
-            const data=await response.json()
-
-            if(!response.ok){
-                setErrors("Failed to fetch category remaining budget")
-            }
-            console.log(data)
-            setCatBudget(data.remainingBudget)
-        } catch (error) {
-            setErrors(error)
-            console.log("Something went wrong : ",error)
-        }
-    }
-
-    useEffect(()=>{
-        fetchBudget()
-    },[])
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         const formData = new FormData(e.currentTarget)
 
-        const payload = {
-            amount: formData.get("amount"),
-            reportId,
-            label,
-            category
-        };
-
+        const amount= formData.get("amount")
         setSubmitting(true);
         try {
-            const res = await fetch('/api/admin/budget/expenses', {
+            const res = await fetch('/api/admin/budget', {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(payload),
+                body: JSON.stringify(amount),
             });
             const data = await res.json();
 
             if (!res.ok) {
-                setErrors(data.error || "Request failed!")
-                return 
+                console.log("Request failed!")
+                setError("failed to post budget")
             }
 
-            console.log(data.payload)
-            setOpen(false)
+        if (res.ok) {
+            handleSetBudget(data.budget.Amount)
+        }
+            console.log(data.budget)
         } catch (err) {
-            setErrors(err instanceof Error ? err.message : "Something went wrong");
+            console.log(err);
         } finally {
             setSubmitting(false);
         }
     };
 
     return (
-        <Dialog open={open} onOpenChange={setOpen}>
+        <Dialog>
+
+            {error && <p>{error}</p>}
             {(
                 <DialogTrigger
                     render={
@@ -79,28 +55,26 @@ const AddExpense = ({ reportId, label, category }: { reportId: string, label: st
                     }
                 >
                     <PlusIcon size={16} className="-mt-0.5 mr-1 inline" />
-                    Add Expense
+                    Budget Allocation
                 </DialogTrigger>
             )}
 
             <DialogContent className="w-full max-w-md rounded-2xl border border-[#dfe5dc] bg-[#fbfcf9] p-5">
-                {errors.length>0 && <p>{errors}</p>}
                 <DialogHeader>
                     <DialogDescription className="text-[11px] font-bold uppercase tracking-[.12em] text-[#6d7a71]">
-                        Add Expense
+                        Decide Budget
                     </DialogDescription>
-                    Remaining Budget is : {catBudget}
                 </DialogHeader>
 
                 <form className="mt-4 space-y-3" onSubmit={handleSubmit}>
                     <label className="block text-xs font-bold uppercase tracking-[.12em] text-[#6d7a71]">
                         Amount to be alloacted for this
                         <input
+                            type="number"
                             id="amount"
                             name="amount"
                             placeholder="e.g. 10000000"
                             required
-                            type="number"
                             className="mt-1.5 w-full rounded-lg border border-[#dfe5dc] bg-white px-3 py-2 text-sm font-normal normal-case tracking-normal text-[#17211b] outline-none focus:border-[#1e5b3e]"
                         />
                     </label>
@@ -115,9 +89,10 @@ const AddExpense = ({ reportId, label, category }: { reportId: string, label: st
                         </button>
                     </DialogFooter>
                 </form>
+
             </DialogContent>
         </Dialog>
     );
 };
 
-export default AddExpense;
+export default BudgetAllocation;

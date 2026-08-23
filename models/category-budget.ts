@@ -3,7 +3,7 @@ import { Schema, model, models } from 'mongoose'
 const CategoryBudgetSchema = new Schema({
   category: {
     type: String,
-    enum: ["Roads crew", "Electrical", "Sanitation", "Parks"],
+    enum: ["Roads", "Lightning", "Cleanliness", "Parks"],
     required: true,
   },
   allocated: { type: Number, required: true ,default : 0 },

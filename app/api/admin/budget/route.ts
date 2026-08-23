@@ -1,37 +1,23 @@
-import { Expense } from "@/models/expense";
+import { Budget, SINGLETON_ID } from "@/models/budget";
 import { NextRequest, NextResponse } from "next/server";
-import { connectDB } from "@/lib/db";
 
 export async function GET(req:NextRequest){
     try {
-        const expenses=await Expense.find();
-        if(!expenses){
-            return NextResponse.json({error : "Error while fetching expenses"},{status : 400})
-        }
-
-        return NextResponse.json({expenses})
+        const budget=await Budget.findById(SINGLETON_ID)
+        return NextResponse.json({budget},{status : 202})
     } catch (error) {
-        return NextResponse.json({error : "Error while fetching expenses"},{status : 400})
+        return NextResponse.json({error : "failed to fetch budget"},{status : 404})
     }
 }
 
 export async function POST(req:NextRequest){
     try {
-        const payload=await req.json()
-        const {reportId,label}=payload
-        const category=payload.category.charAt(0).toUpperCase() + payload.category.slice(1)
-        const amount=Number(payload.amount)
-        console.log(reportId,label,category,amount)
-        await connectDB()
-        const expense=await Expense.create({
-            reportId,
-            label,
-            amount,
-            category
-        })
+        const amount=await req.json()
+        console.log(amount)
 
-        return NextResponse.json({expense},{status : 202})
+        const budget=await Budget.create({_id  :SINGLETON_ID,Amount:amount})
+        return NextResponse.json({budget},{status : 202})
     } catch (error) {
-        return NextResponse.json({error : "Error :to create expense"},{status : 400})
+        return NextResponse.json({error : "failed to post your fking budget"},{status : 404})
     }
 }
