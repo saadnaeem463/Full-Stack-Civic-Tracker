@@ -23,9 +23,15 @@ export async function GET(req:NextRequest){
         }
         console.log("Finnnnnnnnnnnnnnnd")
         const catBudget=await CategoryBudget.find()
-        if(catBudget.length<4) return NextResponse.json({expenses:null},{status : 202})
+        const totalSpend=await CategoryBudget.aggregate([{$group : {_id : null, spend : {$sum : "$spend"},totalAllocated : {$sum : '$allocated'}}}])
+        console.log(totalSpend[0])
+        if(catBudget.length<4) return NextResponse.json({expenses:null,totalSpend : totalSpend[0] ?? {spend : 0,totalAllocated : 0} },{status : 202})
 
-        return NextResponse.json({expenses:catBudget},{status : 202})
+        if(!totalSpend[0]){
+            return NextResponse.json({expenses:catBudget,totalSpend:{spend :0,totalAllocated:0}},{status : 202})
+        }
+
+        return NextResponse.json({expenses:catBudget,totalSpend:totalSpend[0]},{status : 202})
     } catch (error) {
         return NextResponse.json({error : "failed to find expenses by category"},{status : 404})
     }

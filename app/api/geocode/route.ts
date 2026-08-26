@@ -14,6 +14,7 @@ export async function GET(req: NextRequest) {
       reverseUrl.searchParams.set("format","json")
       reverseUrl.searchParams.set("accept-language","en")
       reverseUrl.searchParams.set("zoom","18")
+      reverseUrl.searchParams.set("addressdetails","1")
 
       const res = await fetch(reverseUrl.toString(), {
       headers: {
