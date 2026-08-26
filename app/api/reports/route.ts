@@ -37,7 +37,8 @@ export async function POST(request:Request){
         lng: parsed.data.lng,
         media: parsed.data.media,
         accessibilityFlag: parsed.data.accessibilityFlag,
-        location: parsed.data.location
+        location: parsed.data.location,
+        neighborhood: parsed.data.neighborhood ?? null
         })
 
         pusherServer

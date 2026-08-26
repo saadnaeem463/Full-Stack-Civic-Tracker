@@ -4,12 +4,13 @@ import { useEffect, useState } from 'react'
 interface LocationResult{
     label : string,
     lat: number,
-    lng : number
+    lng : number,
+    neighborhood:string
 }
 
 
 
-const LocationSearch = ({onSelect,setTitle} : {onSelect : (loc : LocationResult)=>void,setTitle : (title : string)=>void }) => {
+const LocationSearch = ({onSelect,setTitle,setNeighbourhoods} : {onSelect : (loc : LocationResult)=>void,setTitle : (title : string)=>void ,setNeighbourhoods : (neigh : string)=>void}) => {
 
     const [query,setQuery]=useState<string>("")
     const [loading,setLoading]=useState(false)
@@ -55,6 +56,7 @@ const LocationSearch = ({onSelect,setTitle} : {onSelect : (loc : LocationResult)
                         setOpen(false)
                         setQuery(r.label)
                         setTitle(r.label)
+                        setNeighbourhoods(r.neighborhood)
                         
                     }}
                     className="cursor-pointer px-3 py-2 text-sm hover:bg-zinc-50"

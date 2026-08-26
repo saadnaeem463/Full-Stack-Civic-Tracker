@@ -32,6 +32,7 @@ const ReportSchema = new Schema({
     poster : {type : String}
   }],
   location : {type : String,required : true},
+  neighborhood: { type: String, default: null },
   upVotedBy : [{type : Schema.Types.ObjectId,ref : "User"}],
   commentCount :{type : Number,default : 0},
   status : {type : String, enum : ['Reported','Acknowledged','In progress','Resolved']},

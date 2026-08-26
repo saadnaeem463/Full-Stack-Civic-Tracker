@@ -40,6 +40,7 @@ const AddReport = () => {
   } | null>(null);
   const [locationMode, setLocationMode] = useState<"gps" | "search">("gps");
   const [locationName,setLocationName]=useState('')
+  const [neighborhood,setNeighbourhood]=useState("")
 
   const handleCordinates = () => {
     if (!navigator.geolocation) {
@@ -65,10 +66,12 @@ const AddReport = () => {
           const res = await fetch(`/api/geocode?lat=${lat}&lng=${lng}`);
           const data = await res.json();
           setLocationName(data.label || `${lat.toFixed(5)}, ${lng.toFixed(5)}`);
+          setNeighbourhood(data.neighborhood ?? "");
         } catch (error) {
           console.error("Reverse geocode failed:", error);
           // Fall back to raw coordinates so submission still has a valid `location` string
           setLocationName(`${lat.toFixed(5)}, ${lng.toFixed(5)}`);
+          
         } finally {
           setLocating(false);
         }
@@ -143,7 +146,8 @@ const AddReport = () => {
       media: media.map(({ url, type }) => ({ url, type })),
       lat: cordinates?.lat,
       lng: cordinates?.lng,
-      location : locationName
+      location : locationName,
+      neighborhood
     };
 
     try {
@@ -266,6 +270,9 @@ const AddReport = () => {
                     onSelect={(loc) =>
                       setCordinates({ lat: loc.lat, lng: loc.lng })
                     }
+                    setNeighbourhoods={(neigh:any)=>{
+                      setNeighbourhood(neigh)
+                    }}
                   />
                 )}
 

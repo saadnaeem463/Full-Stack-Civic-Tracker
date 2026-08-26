@@ -30,8 +30,10 @@ export async function GET(req: NextRequest) {
     // display_name is verbose ("Shop 4, Block 2, ... Karachi, Sindh, 75500, Pakistan").
     // Trim it down to the first few segments so it reads like a normal address.
     const label = (data.display_name as string)?.split(",").slice(0, 4).join(",").trim()
+    const address=data.address ?? {}
+    const neighborhood = address.suburb || address.neighbourhood || address.city_district || null
 
-    return NextResponse.json({ label: label ?? null })
+    return NextResponse.json({ label: label ?? null,neighborhood })
 
   }
 
@@ -49,6 +51,7 @@ export async function GET(req: NextRequest) {
   url.searchParams.set("countrycodes", "pk")
   url.searchParams.set("limit", "5")
   url.searchParams.set("accept-language", "en")
+  url.searchParams.set("addressdetails", "1")
 
   const res = await fetch(url.toString(), {
     headers: {
@@ -59,11 +62,15 @@ export async function GET(req: NextRequest) {
   if (!res.ok) return NextResponse.json({ results: [] }, { status: 502 })
 
   const data = await res.json()
-  const results = data.map((item: any) => ({
+const results = data.map((item: any) => {
+  const address = item.address ?? {}
+  return {
     label: item.display_name,
     lat: parseFloat(item.lat),
     lng: parseFloat(item.lon),
-  }))
+    neighborhood: address.suburb || address.neighbourhood || address.city_district || null,
+  }
+})
 
   return NextResponse.json({ results })
 }
