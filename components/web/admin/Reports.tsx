@@ -17,6 +17,13 @@ type ReportsProps = {
   onBulkStatus: (ids: string[], status: ReportStatus) => void;
 };
 
+const CATEGORY_TO_SPECIALTY: Record<string, string> = {
+  "Roads": "Roads crew",
+  "Lighting": "Electrical",
+  "Cleanliness" : "Sanitation",
+  "Parks" : "Parks"
+};
+
 export function Reports({ reports, workers, search, onSearch, onOpenReport, onStatusChange, onAssign, onBulkStatus }: ReportsProps) {
   const [statusFilter, setStatusFilter] = useState("All");
   const [categoryFilter, setCategoryFilter] = useState("All");
@@ -143,19 +150,22 @@ export function Reports({ reports, workers, search, onSearch, onOpenReport, onSt
                     </td>
                     <td className="px-2 py-3 text-sm tabular-nums text-[#4d5b52]">{report.upvotes}</td>
                     <td className="whitespace-nowrap px-2 py-3 text-sm text-[#4d5b52]">{report.createdLabel}</td>
-                    <td className="px-2 py-3">
-                      <label>
-                        <span className="sr-only">Assign worker for {report.id}</span>
-                        <select
-                      value={report.assignedTo ?? ""}
-                      onChange={(event) => onAssign(report.id, event.target.value || null)}
-                      className="max-w-[140px] rounded-lg border border-[#dfe5dc] bg-white px-2 py-1.5 text-xs outline-none focus:border-[#1e5b3e]">
-                      
-                          <option value="">Unassigned</option>
-                          {workers.map((worker) => <option key={worker.id} value={worker.id}>{worker.name}</option>)}
-                        </select>
-                      </label>
-                    </td>
+<td className="px-2 py-3">
+                        <label>
+                          <span className="sr-only">Assign worker for {report.id}</span>
+                          <select
+                            value={report.assignedTo ?? ""}
+                            onChange={(event) => onAssign(report.id, event.target.value || null)}
+                            className="max-w-[140px] rounded-lg border border-[#dfe5dc] bg-white px-2 py-1.5 text-xs outline-none focus:border-[#1e5b3e]">
+                            <option value="">Unassigned</option>
+                            {workers
+                              .filter((worker) => worker.specialty === CATEGORY_TO_SPECIALTY[report.category])
+                              .map((worker) => (
+                                <option key={worker.id} value={worker.id}>{worker.name}</option>
+                              ))}
+                          </select>
+                        </label>
+                      </td>
                     <td className="px-2 py-3 text-right">
                       <button onClick={() => onOpenReport(report)} className="rounded-lg border border-[#dfe5dc] px-2.5 py-1.5 text-xs font-bold text-[#25603f] hover:bg-[#eef4ed]">View</button>
                     </td>

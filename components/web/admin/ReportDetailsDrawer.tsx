@@ -16,6 +16,13 @@ type DrawerProps = {
   onFlag: (id: string, reason: string) => void;
 };
 
+const CATEGORY_TO_SPECIALTY: Record<string, string> = {
+  "Roads": "Roads crew",
+  "Lighting": "Electrical",
+  "Cleanliness" : "Sanitation",
+  "Parks" : "Parks"
+};
+
 export function ReportDetailsDrawer({ report, workers, onClose, onStatusChange, onAssign, onAddNote, onFlag }: DrawerProps) {
   const [note, setNote] = useState("");
   const [flagOpen, setFlagOpen] = useState(false);
@@ -61,7 +68,11 @@ export function ReportDetailsDrawer({ report, workers, onClose, onStatusChange, 
                 className="mt-1.5 w-full rounded-lg border border-[#dfe5dc] bg-white px-3 py-2 text-sm font-medium normal-case tracking-normal text-[#17211b] outline-none focus:border-[#1e5b3e]"
               >
                 <option value="">Unassigned</option>
-                {workers.map((worker) => <option key={worker.id} value={worker.id}>{worker.name} · {worker.specialty}</option>)}
+                {workers
+                .filter((worker) => worker.specialty === CATEGORY_TO_SPECIALTY[report.category])
+                .map((worker) => (
+                  <option key={worker.id} value={worker.id}>{worker.name} . {worker.specialty}</option>
+                ))}
               </select>
             </label>
           </div>

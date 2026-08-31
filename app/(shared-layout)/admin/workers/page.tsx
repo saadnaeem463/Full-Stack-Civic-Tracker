@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { PlusIcon } from "lucide-react";
 import AddWorkers from "@/components/web/add-workers";
 import { adaptWorker } from "@/lib/report-adapter";
+import ViewTasks from "@/components/web/admin/view-tasks";
 
 const WrokersAdmin = () => {
   const [workers, setWorkers] = useState<ReturnType<typeof adaptWorker>[]>([]);
@@ -112,7 +113,9 @@ const WrokersAdmin = () => {
                   </div>
                   <div className="rounded-lg bg-[#f4f7f3] px-2 py-2">
                     <dt className="text-[10px] text-[#6d7a71]">Task</dt>
-                    <dd className="text-sm font-bold">{w.currentReport ?? "—"}</dd>
+                    {!w.currentReport && <dd className="text-sm font-bold">No Tasks Assigned</dd>}
+                    {w.currentReport && <dd className="text-sm font-bold"><ViewTasks currentReports={w.currentReport} /></dd>}
+                    {/* <dd className="text-sm font-bold">{w.currentReport ?? "—"}</dd> */}
                   </div>
                 </dl>
 

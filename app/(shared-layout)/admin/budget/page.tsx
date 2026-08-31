@@ -82,7 +82,6 @@ export default function BudgetPage() {
         Promise.all([fetchBudget(),fetchExpenses(),fetchExpensesByCat()]).finally(()=>{
             setLoading(false)
         })
-
     }, [])
 
     const pctCommitted = totalAllocated > 0 ? Math.min(100, (totalSpend / totalAllocated) * 100) : 0

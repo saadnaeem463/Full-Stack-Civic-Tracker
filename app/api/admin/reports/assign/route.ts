@@ -30,19 +30,27 @@ export async function PATCH(req:NextRequest){
         }
 
         if(!workerId){
-            return NextResponse.json({error : "workerID is required"},{status : 404})
-        }
-        const worker=await Workers.findById(workerId)
-        if(!worker){
-            return NextResponse.json({error : "worker doesn't exists"},{status : 404})
-        }
+            await Workers.findByIdAndUpdate(report.assignedTo,{
+                currentReport :null,
+                status : "Free"
+            })
 
-        worker.currentReport=report._id
-        worker.status="Busy"
-        await worker.save()
-
-        report.assignedTo=workerId || null
-        await report.save()
+            report.assignedTo=null
+            await report.save()
+        }
+        else{
+            const worker=await Workers.findById(workerId)
+            if(!worker){
+                return NextResponse.json({error : "worker doesn't exists"},{status : 404})
+            }
+    
+            worker.currentReport=report._id
+            worker.status="Busy"
+            await worker.save()
+    
+            report.assignedTo=workerId
+            await report.save()
+        }
 
         pusherServer
         .trigger(REPORTS_CHANNEL,NEW_REPORT_EVENT,{reportId,workerId})
