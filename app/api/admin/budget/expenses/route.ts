@@ -42,6 +42,6 @@ export async function POST(req:NextRequest){
 
         return NextResponse.json({expense},{status : 202})
     } catch (error) {
-        return NextResponse.json({error : "Error :to create expense"},{status : 400})
+        return NextResponse.json({error : "Error to create expense"},{status : 500})
     }
 }

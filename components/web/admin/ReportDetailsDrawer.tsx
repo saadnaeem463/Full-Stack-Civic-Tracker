@@ -3,6 +3,7 @@ import { FlagIcon, ImageIcon, MapPinIcon, XIcon } from "lucide-react";
 import { StatusBadge } from "./StatusBadge";
 import { Report, ReportStatus, Worker } from "@/data/adminData";
 import AddExpense from "../add-expense";
+import { ActorProps } from "./ReportPanel";
 
 const statuses: ReportStatus[] = ["Reported", "Acknowledged", "In progress", "Resolved"];
 
@@ -14,16 +15,18 @@ type DrawerProps = {
   onAssign: (id: string, workerId: string | null) => void;
   onAddNote: (id: string, note: string) => void;
   onFlag: (id: string, reason: string) => void;
+  actor : ActorProps;
+  
 };
 
 const CATEGORY_TO_SPECIALTY: Record<string, string> = {
   "Roads": "Roads crew",
-  "Lighting": "Electrical",
+  "Lightning": "Electrical",
   "Cleanliness" : "Sanitation",
   "Parks" : "Parks"
 };
 
-export function ReportDetailsDrawer({ report, workers, onClose, onStatusChange, onAssign, onAddNote, onFlag }: DrawerProps) {
+export function ReportDetailsDrawer({ report, workers, onClose, onStatusChange, onAssign, onAddNote, onFlag,actor }: DrawerProps) {
   const [note, setNote] = useState("");
   const [flagOpen, setFlagOpen] = useState(false);
   const [reason, setReason] = useState("");
@@ -155,7 +158,7 @@ export function ReportDetailsDrawer({ report, workers, onClose, onStatusChange, 
           <button onClick={() => setFlagOpen(true)} className="inline-flex items-center gap-2 rounded-lg border border-[#e8d3d1] px-3 py-2 text-xs font-bold text-[#a4544f] hover:bg-[#fbf1f0]">
             <FlagIcon size={14} /> {report.suspicious ? "Update fake report flag" : "Flag as fake report"}
           </button>
-          <AddExpense reportId={report.id} label={report.title} category={report.category} />
+          <AddExpense reportId={report.id} label={report.title} actor={actor} category={report.category} />
         </div>
 
         {flagOpen && (
