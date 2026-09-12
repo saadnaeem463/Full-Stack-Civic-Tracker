@@ -4,11 +4,16 @@ import { PlusIcon } from "lucide-react";
 import AddWorkers from "@/components/web/add-workers";
 import { adaptWorker } from "@/lib/report-adapter";
 import ViewTasks from "@/components/web/admin/view-tasks";
-
+import { User } from "@/types/user";
+import { getMe } from "@/lib/services/auth.services";
 const WrokersAdmin = () => {
+  const [user, setUser] = useState<User | null>(null);
+  const isAdmin = user?.role === "admin";
   const [workers, setWorkers] = useState<ReturnType<typeof adaptWorker>[]>([]);
   const [errors, setErrors] = useState("");
-  const [editingWorker, setEditingWorker] = useState<ReturnType<typeof adaptWorker> | null>(null);
+  const [editingWorker, setEditingWorker] = useState<ReturnType<
+    typeof adaptWorker
+  > | null>(null);
   const [editOpen, setEditOpen] = useState(false);
 
   useEffect(() => {
@@ -24,8 +29,16 @@ const WrokersAdmin = () => {
     fetchWorkers();
   }, []);
 
+  useEffect(() => {
+    getMe()
+      .then((res) => setUser(res.user))
+      .catch(() => {});
+  }, []);
+
   async function handleRemove(workerId: string) {
-    const res = await fetch(`/api/admin/workers?workerId=${workerId}`, { method: "DELETE" });
+    const res = await fetch(`/api/admin/workers?workerId=${workerId}`, {
+      method: "DELETE",
+    });
     if (!res.ok) {
       setErrors("Error while deleting the worker");
       return;
@@ -37,7 +50,9 @@ const WrokersAdmin = () => {
     const adapted = adaptWorker(newWorker);
     setWorkers((prev) => {
       const exists = prev.some((w) => w.id === adapted.id);
-      return exists ? prev.map((w) => (w.id === adapted.id ? adapted : w)) : [...prev, adapted];
+      return exists
+        ? prev.map((w) => (w.id === adapted.id ? adapted : w))
+        : [...prev, adapted];
     });
   };
 
@@ -55,20 +70,28 @@ const WrokersAdmin = () => {
             Workers
           </h1>
           <p className="mt-2.5 max-w-xl text-sm leading-6 text-[#637068]">
-            Who is available, what they are working on, and how quickly each crew closes assignments.
+            Who is available, what they are working on, and how quickly each
+            crew closes assignments.
           </p>
         </div>
-        <AddWorkers handleWorkerAdded={handleWorkerAdded} isEdit={null} />
+        {isAdmin && (
+          <AddWorkers handleWorkerAdded={handleWorkerAdded} isEdit={null} />
+        )}
       </div>
 
-      {errors && <p className="mb-4 text-sm font-medium text-[#a4544f]">{errors}</p>}
+      {errors && (
+        <p className="mb-4 text-sm font-medium text-[#a4544f]">{errors}</p>
+      )}
 
       {/* Section card */}
       <section className="rounded-2xl border border-[#dfe5dc] bg-[#fbfcf9] p-5">
         <div className="mb-5">
-          <h2 className="text-base font-bold tracking-[-.02em]">Crew availability</h2>
+          <h2 className="text-base font-bold tracking-[-.02em]">
+            Crew availability
+          </h2>
           <p className="mt-1 text-xs text-[#6d7a71]">
-            {busy} of {workers.length} workers are currently assigned to an active report.
+            {busy} of {workers.length} workers are currently assigned to an
+            active report.
           </p>
         </div>
 
@@ -82,7 +105,10 @@ const WrokersAdmin = () => {
         ) : (
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
             {workers.map((w) => (
-              <article key={w.id} className="rounded-xl border border-[#dfe5dc] bg-white p-4">
+              <article
+                key={w.id}
+                className="rounded-xl border border-[#dfe5dc] bg-white p-4"
+              >
                 <div className="flex items-start gap-3">
                   <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[#e8f1e7] text-xs font-bold text-[#1e5b3e]">
                     {w.initials}
@@ -109,40 +135,50 @@ const WrokersAdmin = () => {
                   </div>
                   <div className="rounded-lg bg-[#f4f7f3] px-2 py-2">
                     <dt className="text-[10px] text-[#6d7a71]">Avg hrs</dt>
-                    <dd className="text-sm font-bold">{w.avgResolutionHours}</dd>
+                    <dd className="text-sm font-bold">
+                      {w.avgResolutionHours}
+                    </dd>
                   </div>
                   <div className="rounded-lg bg-[#f4f7f3] px-2 py-2">
                     <dt className="text-[10px] text-[#6d7a71]">Task</dt>
-                    {!w.currentReport && <dd className="text-sm font-bold">No Tasks Assigned</dd>}
-                    {w.currentReport && <dd className="text-sm font-bold"><ViewTasks currentReports={w.currentReport} /></dd>}
+                    {!w.currentReport && (
+                      <dd className="text-sm font-bold">No Tasks Assigned</dd>
+                    )}
+                    {w.currentReport && (
+                      <dd className="text-sm font-bold">
+                        <ViewTasks currentReports={w.currentReport} />
+                      </dd>
+                    )}
                     {/* <dd className="text-sm font-bold">{w.currentReport ?? "—"}</dd> */}
                   </div>
                 </dl>
 
-                <div className="mt-3 flex gap-2">
-                  <button
-                    onClick={() => {
-                      setEditingWorker(w);
-                      setEditOpen(true);
-                    }}
-                    className="flex-1 rounded-lg border border-[#dfe5dc] py-2 text-xs font-bold text-[#25603f] hover:bg-[#eef4ed]"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => handleRemove(w.id)}
-                    className="rounded-lg border border-[#e8d3d1] px-3 py-2 text-xs font-bold text-[#a4544f] hover:bg-[#fbf1f0]"
-                  >
-                    Remove
-                  </button>
-                </div>
+                {isAdmin && (
+                  <div className="mt-3 flex gap-2">
+                    <button
+                      onClick={() => {
+                        setEditingWorker(w);
+                        setEditOpen(true);
+                      }}
+                      className="flex-1 rounded-lg border border-[#dfe5dc] py-2 text-xs font-bold text-[#25603f] hover:bg-[#eef4ed]"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => handleRemove(w.id)}
+                      className="rounded-lg border border-[#e8d3d1] px-3 py-2 text-xs font-bold text-[#a4544f] hover:bg-[#fbf1f0]"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                )}
               </article>
             ))}
           </div>
         )}
       </section>
 
-      {editingWorker && (
+      {isAdmin && editingWorker && (
         <AddWorkers
           handleWorkerAdded={handleWorkerAdded}
           isEdit={editingWorker}

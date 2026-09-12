@@ -3,8 +3,16 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { verifyToken } from "@/lib/jwt";
 
+const ADMIN_ONLY_PREFIXES = [
+  "/admin/budget",
+  "/admin/settings",
+  "/api/admin/budget",
+  "/api/admin/settings",
+];
+
 export function middleware(request: NextRequest) {
-  const isApiRoute = request.nextUrl.pathname.startsWith("/api/admin");
+   const { pathname } = request.nextUrl;
+    const isApiRoute = pathname.startsWith("/api/admin");
   const token = request.cookies.get("token")?.value;
 
   if (!token) {
@@ -14,9 +22,17 @@ export function middleware(request: NextRequest) {
 
   try {
     const decoded = verifyToken(token);
-    if (decoded.role !== "admin") {
+    const isStaff=decoded.role==='admin' || decoded.role==='moderator'
+    const isAdminOnlyPath=ADMIN_ONLY_PREFIXES.some((p)=>pathname.startsWith(p))
+
+    if (!isStaff) {
+      if (isApiRoute) return NextResponse.json({ error: "Not authorized" }, { status: 403 });
+      return NextResponse.redirect(new URL("/", request.url));
+    }
+
+    if (isAdminOnlyPath && decoded.role !== "admin") {
       if (isApiRoute) return NextResponse.json({ error: "Admin access required" }, { status: 403 });
-      if (request.nextUrl.pathname.startsWith("/admin")) return NextResponse.redirect(new URL("/", request.url));
+      return NextResponse.redirect(new URL("/admin/dashboard",request.url))
     }
     return NextResponse.next();
   } catch (err) {

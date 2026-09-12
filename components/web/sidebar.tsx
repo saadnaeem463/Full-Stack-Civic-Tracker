@@ -27,10 +27,10 @@ import { useRouter, usePathname } from "next/navigation"
 const navItems = [
   { label: "Dashboard", Icon: LayoutDashboardIcon },
   { label: "Reports", Icon: ClipboardListIcon },
-  { label: "Workers", Icon: UsersIcon },
-  { label: "Budget", Icon: WalletIcon },
+  { label: "Workers", Icon: UsersIcon},
+  { label: "Budget", Icon: WalletIcon,adminOnly :true },
   { label: "Analytics", Icon: BarChart3Icon },
-  { label: "Settings", Icon: SettingsIcon },
+  { label: "Settings", Icon: SettingsIcon,adminOnly :true },
 ]
 
 export function AppSidebar() {
@@ -42,7 +42,9 @@ export function AppSidebar() {
     getMe().then((res) => setUser(res.user)).catch(() => {})
   }, [])
 
-  if (user?.role !== "admin") return null
+  if (user?.role !== "admin" && user?.role !=="moderator" ) return null
+
+  const visibleItems=navItems.filter((item)=> !item.adminOnly || user?.role==='admin')
 
   return (
     <Sidebar collapsible="offcanvas" className="border-r border-[#dfe5dc] bg-[#fbfcf9]">
@@ -66,7 +68,7 @@ export function AppSidebar() {
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
-              {navItems.map(({ label, Icon }) => {
+              {visibleItems.map(({ label, Icon }) => {
                 const slug = label.toLowerCase()
                 const active = pathname === `/admin/${slug}`
                 return (
@@ -93,9 +95,6 @@ export function AppSidebar() {
 
       <SidebarFooter className="px-3 pb-4">
         <div className="rounded-xl border border-[#dfe5dc] bg-[#e8f1e7] p-4">
-          <p className="text-xs font-bold uppercase tracking-[.12em] text-[#1e5b3e]">
-            SLA watch
-          </p>
           <p className="mt-1.5 text-sm leading-5 text-[#3f5546]">
             2 open reports breach their response window today.
           </p>

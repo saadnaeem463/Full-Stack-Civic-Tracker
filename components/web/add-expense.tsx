@@ -28,6 +28,9 @@ const AddExpense = ({
   const [errors, setErrors] = useState("");
   const [open, setOpen] = useState(false);
   const [amount, setAmount] = useState("");
+  const [requestPending, setRequestPending] = useState(false);
+  const [budgetExceeded, setBudgetExceeded] = useState(false);
+  const [requestNote, setRequestNote] = useState("");
   const formRef = useRef<HTMLFormElement>(null);
 
   const fetchBudget = async () => {
@@ -56,6 +59,7 @@ const AddExpense = ({
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setBudgetExceeded(false);
     const expense = amount;
     const payload = {
       amount: expense,
@@ -75,6 +79,7 @@ const AddExpense = ({
 
       if (!res.ok) {
         setErrors(data.error || "Request failed!");
+        if (res.status === 409) setBudgetExceeded(true);
         return;
       }
 
@@ -102,6 +107,32 @@ const AddExpense = ({
     }
   };
 
+  const handleRequestBudget = async () => {
+    if (!requestNote.trim()) {
+      setErrors("Please add a reason for the budget request");
+      return;
+    }
+
+    try {
+      const res = await fetch("/api/admin/budget/requests", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ category, note: requestNote }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        setErrors(data.error || "Failed to request budget");
+        return;
+      }
+
+      setRequestPending(true);
+      setErrors("");
+    } catch (err) {
+      setErrors(err instanceof Error ? err.message : "Something went wrong");
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       {
@@ -117,6 +148,32 @@ const AddExpense = ({
 
       <DialogContent className="w-full max-w-md rounded-2xl border border-[#dfe5dc] bg-[#fbfcf9] p-5">
         {errors.length > 0 && <p>{errors}</p>}
+
+        {budgetExceeded && !requestPending && (
+          <div className="mt-2 space-y-2">
+            <textarea
+              value={requestNote}
+              onChange={(e) => setRequestNote(e.target.value)}
+              placeholder="Why does this category need more budget?"
+              required
+              className="w-full rounded-lg border border-[#dfe5dc] bg-white px-3 py-2 text-sm outline-none focus:border-[#1e5b3e]"
+              rows={2}
+            />
+            <button
+              type="button"
+              onClick={handleRequestBudget}
+              className="rounded-lg border border-[#1e5b3e] px-3 py-2 text-xs font-bold text-[#1e5b3e] hover:bg-[#eef4ed]"
+            >
+              Request Budget Increase
+            </button>
+          </div>
+        )}
+
+        {requestPending && (
+          <p className="mt-2 text-xs font-bold text-[#5c8069]">
+            Budget request pending admin approval.
+          </p>
+        )}
         <DialogHeader>
           <DialogDescription className="text-[11px] font-bold uppercase tracking-[.12em] text-[#6d7a71]">
             Add Expense
