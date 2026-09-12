@@ -41,15 +41,19 @@ export async function POST(req:NextRequest){
     try {
         const payload=await req.json()
         const {category,amount}=payload
-        console.log(amount)
         const budgetCheck=await CategoryBudget.aggregate([{$group : {_id: null,totalSum : {$sum : "$allocated"}}}])
         const budget=await Budget.findById(SINGLETON_ID)
         if((amount+(budgetCheck[0]?.totalSum) )> budget.Amount){
             return NextResponse.json({error : "Allocation Exceeded"},{status : 409})
         }
-        console.log("Cates budget  : ",(amount+budgetCheck[0]?.totalSum))
-        const catBudget=await CategoryBudget.create({category,allocated : amount})
-        return NextResponse.json({message : "Amount allocated for category"},{status : 202})
+
+        const catBudget = await CategoryBudget.findOneAndUpdate(
+            { category },
+            { $inc: { allocated: amount } },
+            { new: true, upsert: true }
+        )
+
+        return NextResponse.json({message : "Amount allocated for category", catBudget},{status : 202})
     } catch (error) {
         return NextResponse.json({error : "failed to allocate budget for category"},{status : 404})
     }

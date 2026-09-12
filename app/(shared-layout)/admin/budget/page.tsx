@@ -2,6 +2,7 @@
 import BudgetAllocation from '@/components/web/budget-allocation'
 import CategoryBudgetAllocation from '@/components/web/cat-budget'
 import React, { useState, useEffect } from 'react'
+import PendingBudgetRequests from '@/components/web/admin/pending-budget-requests'
 
 interface ExpenseProp {
     _id: string
@@ -39,7 +40,7 @@ export default function BudgetPage() {
     const [allocatedCats, setAllocatedCats] = useState<Category[]>([])
     const [totalAllocated, setTotalAllocated] = useState(0)
     const [totalSpend, setTotalSpend] = useState(0)
-    const [loading,setLoading]=useState(true)
+    const [loading, setLoading] = useState(true)
 
     // How much of what's been handed out to categories is still unspent
     const remainingBudget = totalAllocated - totalSpend
@@ -79,7 +80,7 @@ export default function BudgetPage() {
     }
 
     useEffect(() => {
-        Promise.all([fetchBudget(),fetchExpenses(),fetchExpensesByCat()]).finally(()=>{
+        Promise.all([fetchBudget(), fetchExpenses(), fetchExpensesByCat()]).finally(() => {
             setLoading(false)
         })
     }, [])
@@ -96,16 +97,16 @@ export default function BudgetPage() {
         .slice(0, 6)
 
     if (loading) {
-    return (
-        <div className="flex min-h-screen items-center justify-center bg-[#F5F3EC]">
-            <p className="text-sm text-neutral-400">Loading budget…</p>
-        </div>
-    )
+        return (
+            <div className="flex min-h-screen items-center justify-center bg-[#F5F3EC]">
+                <p className="text-sm text-neutral-400">Loading budget…</p>
+            </div>
+        )
     }
 
     return (
         <div className="min-h-screen bg-[#F5F3EC] px-6 py-10 sm:px-10">
-            
+
             <div className="mx-auto max-w-4xl">
                 {!budget ? (
                     <div className="rounded-2xl border border-black/5 bg-white p-8">
@@ -176,10 +177,22 @@ export default function BudgetPage() {
                             </p>
                         </div>
 
+                        {/* Pending budget requests */}
+                        <PendingBudgetRequests onResolved={fetchExpensesByCat} />
+
                         {/* Allocation by category */}
                         <div className="mb-4 rounded-2xl border border-black/5 bg-white p-6">
-                            <p className="font-medium text-neutral-900">Allocation by category</p>
-                            <p className="mb-5 text-sm text-neutral-500">Spend against each service line.</p>
+                            <div className="mb-5 flex items-start justify-between gap-4">
+                                <div>
+                                    <p className="font-medium text-neutral-900">Allocation by category</p>
+                                    <p className="text-sm text-neutral-500">Spend against each service line.</p>
+                                </div>
+                                <CategoryBudgetAllocation
+                                    remainingCategories={CATEGORIES as unknown as Category[]}
+                                    onAllocated={() => fetchExpensesByCat()}
+                                    budget={unallocatedBudget}
+                                />
+                            </div>
 
                             <div className="space-y-5">
                                 {orderedCats.map((cat) => {
@@ -195,9 +208,8 @@ export default function BudgetPage() {
                                             </div>
                                             <div className="h-2 w-full overflow-hidden rounded-full bg-neutral-100">
                                                 <div
-                                                    className={`h-full rounded-full transition-all ${
-                                                        isWarning ? "bg-[#E08A2C]" : "bg-[#A9C1AC]"
-                                                    }`}
+                                                    className={`h-full rounded-full transition-all ${isWarning ? "bg-[#E08A2C]" : "bg-[#A9C1AC]"
+                                                        }`}
                                                     style={{ width: `${pct}%` }}
                                                 />
                                             </div>

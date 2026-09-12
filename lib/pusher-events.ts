@@ -10,3 +10,6 @@ export const NEW_COMMENTS_EVENT="new-comment"
 export const UPVOTE_CHANNEL='upvote-channel'
 export const NEW_UPVOTE_EVENT='upvote-added'
 export const REPORT_UPDATED_EVENT='report-updated'
+export const BUDGET_CHANNEL="budget-channel"
+export const NEW_BUDGET_REQUEST_EVENT="new-budget-request"
+export const BUDGET_REQUEST_RESOLVED_EVENT="budget-request-resolved"

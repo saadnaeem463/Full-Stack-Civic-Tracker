@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { BellIcon, ChevronDownIcon, SearchIcon, XIcon } from "lucide-react";
-import { notifications } from "@/data/adminData";
+import { pusherClient, BUDGET_CHANNEL, NEW_BUDGET_REQUEST_EVENT, BUDGET_REQUEST_RESOLVED_EVENT } from "@/lib/pusher-client";
 
 type AdminShellProps = {
   search: string;
@@ -8,10 +8,63 @@ type AdminShellProps = {
   children: React.ReactNode;
 };
 
+type NotificationItem = {
+  id: string;
+  title: string;
+  detail: string;
+  urgent: boolean;
+};
+
 export function AdminShell({ search, onSearch, children }: AdminShellProps) {
   const [notifOpen, setNotifOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
+  const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const urgentCount = notifications.filter((item) => item.urgent).length;
+
+  useEffect(() => {
+    fetch("/api/admin/budget/requests?status=Pending")
+      .then((res) => res.json())
+      .then((data) => {
+        setNotifications(
+          (data.requests ?? []).map((r: any) => ({
+            id: r._id,
+            title: "Budget request pending",
+            detail: `Category Budget Request for ${r.category}`,
+            urgent: true,
+          }))
+        );
+      })
+      .catch((err) => console.log("Failed to load pending budget requests:", err));
+  }, []);
+
+  useEffect(() => {
+    const channel = pusherClient.subscribe(BUDGET_CHANNEL);
+
+    channel.bind(NEW_BUDGET_REQUEST_EVENT, (data: { requestId: string; category: string }) => {
+      setNotifications((prev) => {
+        if (prev.some((n) => n.id === data.requestId)) return prev;
+        return [
+          {
+            id: data.requestId,
+            title: "Budget request pending",
+            detail: `Category Budget Request for ${data.category}`,
+            urgent: true,
+          },
+          ...prev,
+        ];
+      });
+    });
+
+    channel.bind(BUDGET_REQUEST_RESOLVED_EVENT, (data: { requestId: string }) => {
+      setNotifications((prev) => prev.filter((n) => n.id !== data.requestId));
+    });
+
+    return () => {
+      channel.unbind(NEW_BUDGET_REQUEST_EVENT);
+      channel.unbind(BUDGET_REQUEST_RESOLVED_EVENT);
+      pusherClient.unsubscribe(BUDGET_CHANNEL);
+    };
+  }, []);
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-[#f7f8f4] text-[#17211b]">
@@ -42,6 +95,9 @@ export function AdminShell({ search, onSearch, children }: AdminShellProps) {
               {notifOpen && (
                 <div className="absolute right-0 top-11 z-40 w-[300px] rounded-xl border border-[#dfe5dc] bg-white p-2 shadow-lg">
                   <p className="px-2 py-1.5 text-[11px] font-bold uppercase tracking-[.12em] text-[#6d7a71]">Notification center</p>
+                  {notifications.length === 0 && (
+                    <p className="px-2 py-3 text-xs text-[#6d7a71]">No notifications right now.</p>
+                  )}
                   {notifications.map((item) => (
                     <div key={item.id} className="rounded-lg px-2 py-2 hover:bg-[#f4f7f3]">
                       <p className="flex items-center gap-2 text-sm font-semibold">

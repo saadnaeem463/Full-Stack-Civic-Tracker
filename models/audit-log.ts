@@ -7,7 +7,7 @@ const AuditLogSchema = new Schema({
 
   action: {
     type: String,
-    enum: ["status_changed", "note_added", "worker_assigned", "worker_unassigned", "expense_added", "budget_allocated"],
+    enum: ["status_changed", "note_added", "worker_assigned", "worker_unassigned", "expense_added", "budget_allocated","budget_requested","budget_rejected"],
     required: true,
   },
 
