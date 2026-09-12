@@ -146,23 +146,26 @@ export default function BudgetPage() {
                                         {formatCurrency(remainingBudget)}
                                     </p>
                                 </div>
-                                <div className="flex gap-8 pt-1 text-right">
-                                    <div>
-                                        <p className="text-xs text-neutral-500">Total budget</p>
-                                        <p className="font-medium text-neutral-900">{formatCurrency(budget)}</p>
+                                <div className="flex items-start gap-8">
+                                    <div className="flex gap-8 pt-1 text-right">
+                                        <div>
+                                            <p className="text-xs text-neutral-500">Total budget</p>
+                                            <p className="font-medium text-neutral-900">{formatCurrency(budget)}</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-xs text-neutral-500">Total Allocated budget</p>
+                                            <p className="font-medium text-neutral-900">{formatCurrency(totalAllocated)}</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-xs text-neutral-500">Spent</p>
+                                            <p className="font-medium text-neutral-900">{formatCurrency(totalSpend)}</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-xs text-neutral-500">Unallocated</p>
+                                            <p className="font-medium text-neutral-900">{formatCurrency(unallocatedBudget)}</p>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <p className="text-xs text-neutral-500">Total Allocated budget</p>
-                                        <p className="font-medium text-neutral-900">{formatCurrency(totalAllocated)}</p>
-                                    </div>
-                                    <div>
-                                        <p className="text-xs text-neutral-500">Spent</p>
-                                        <p className="font-medium text-neutral-900">{formatCurrency(totalSpend)}</p>
-                                    </div>
-                                    <div>
-                                        <p className="text-xs text-neutral-500">Unallocated</p>
-                                        <p className="font-medium text-neutral-900">{formatCurrency(unallocatedBudget)}</p>
-                                    </div>
+                                    <BudgetAllocation handleSetBudget={(amount) => setBudget((prev) => prev + amount)} />
                                 </div>
                             </div>
 

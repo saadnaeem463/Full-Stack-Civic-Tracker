@@ -13,11 +13,13 @@ export async function GET(req:NextRequest){
 export async function POST(req:NextRequest){
     try {
         const amount=await req.json()
-        console.log(amount)
-
-        const budget=await Budget.create({_id  :SINGLETON_ID,Amount:amount})
+        const budget = await Budget.findByIdAndUpdate(
+            SINGLETON_ID,
+            { $inc: { Amount: Number(amount) } },
+            { new: true, upsert: true }
+        )
         return NextResponse.json({budget},{status : 202})
     } catch (error) {
-        return NextResponse.json({error : "failed to post your fking budget"},{status : 404})
+        return NextResponse.json({error : "failed to post budget"},{status : 404})
     }
 }
