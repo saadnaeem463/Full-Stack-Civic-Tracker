@@ -7,15 +7,15 @@ import {
     DialogContent,
     DialogHeader,
     DialogDescription,
-    DialogTitle,
     DialogFooter,
 } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 
 const STATUS_COLORS: Record<string, string> = {
-    Reported: "bg-red-100 text-red-700",
-    Acknowledged: "bg-blue-100 text-blue-700",
-    "In progress": "bg-amber-100 text-amber-700",
-    Resolved: "bg-green-100 text-green-700",
+    Reported: "bg-destructive/10 text-destructive",
+    Acknowledged: "bg-info/10 text-info",
+    "In progress": "bg-warning/10 text-warning",
+    Resolved: "bg-success/10 text-success",
 };
 
 const ViewTasks = ({ currentReports }: { currentReports: string }) => {
@@ -24,7 +24,6 @@ const ViewTasks = ({ currentReports }: { currentReports: string }) => {
     const [loading, setLoading] = useState(false);
     const [errors, setErrors] = useState("");
     const [submitting, setSubmitting] = useState(false);
-    const [catBudget, setCatBudget] = useState(0);
 
     const reportId = currentReports;
 
@@ -82,36 +81,36 @@ const ViewTasks = ({ currentReports }: { currentReports: string }) => {
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger
                 render={
-                    <button className="inline-flex items-center gap-2 self-start rounded-lg bg-[#1e5b3e] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#174a32] sm:self-auto" />
+                    <Button size="sm" className="justify-start" />
                 }
             >
-                <PlusIcon size={16} className="-mt-0.5 mr-1 inline" />
+                <PlusIcon />
                 View Task
             </DialogTrigger>
 
-            <DialogContent className="w-full max-w-lg rounded-2xl border border-[#dfe5dc] bg-[#fbfcf9] p-5">
+            <DialogContent className="w-full max-w-lg rounded-lg border border-border bg-card p-5">
                 {errors.length > 0 && (
-                    <p className="mb-3 rounded-lg bg-red-50 px-3 py-2 text-sm font-medium text-[#a4544f]">
+                    <p className="mb-3 rounded-lg bg-destructive/5 px-3 py-2 text-sm font-medium text-destructive">
                         {errors}
                     </p>
                 )}
 
                 <DialogHeader>
-                    <DialogDescription className="text-[11px] font-bold uppercase tracking-[.12em] text-[#6d7a71]">
+                    <DialogDescription className="text-[11px] font-semibold uppercase tracking-[.14em] text-muted-foreground">
                         Assigned Report Details
                     </DialogDescription>
                 </DialogHeader>
 
                 {loading ? (
-                    <p className="py-6 text-center text-sm text-[#6d7a71]">Loading report…</p>
+                    <p className="py-6 text-center text-sm text-muted-foreground">Loading report…</p>
                 ) : report ? (
                     <div className="mt-4 space-y-4">
                         {/* Title + Status */}
                         <div className="flex items-start justify-between gap-3">
-                            <h3 className="text-base font-bold tracking-[-.02em]">{report.title}</h3>
+                            <h3 className="text-sm font-semibold tracking-tight">{report.title}</h3>
                             <span
-                                className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold ${
-                                    STATUS_COLORS[report.status] ?? "bg-gray-100 text-gray-700"
+                                className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+                                    STATUS_COLORS[report.status] ?? "bg-muted text-muted-foreground"
                                 }`}
                             >
                                 {report.status}
@@ -120,28 +119,28 @@ const ViewTasks = ({ currentReports }: { currentReports: string }) => {
 
                         {/* Details grid */}
                         <dl className="grid grid-cols-2 gap-3 text-sm">
-                            <div className="rounded-lg bg-[#f4f7f3] px-3 py-2">
-                                <dt className="text-[10px] font-bold uppercase tracking-[.1em] text-[#6d7a71]">
+                            <div className="rounded-lg bg-muted px-3 py-2">
+                                <dt className="text-[10px] font-semibold uppercase tracking-[.14em] text-muted-foreground">
                                     Category
                                 </dt>
                                 <dd className="mt-0.5 font-medium">{report.issueType}</dd>
                             </div>
-                            <div className="rounded-lg bg-[#f4f7f3] px-3 py-2">
-                                <dt className="text-[10px] font-bold uppercase tracking-[.1em] text-[#6d7a71]">
+                            <div className="rounded-lg bg-muted px-3 py-2">
+                                <dt className="text-[10px] font-semibold uppercase tracking-[.14em] text-muted-foreground">
                                     Location
                                 </dt>
                                 <dd className="mt-0.5 font-medium">{report.location}</dd>
                             </div>
-                            <div className="rounded-lg bg-[#f4f7f3] px-3 py-2">
-                                <dt className="text-[10px] font-bold uppercase tracking-[.1em] text-[#6d7a71]">
+                            <div className="rounded-lg bg-muted px-3 py-2">
+                                <dt className="text-[10px] font-semibold uppercase tracking-[.14em] text-muted-foreground">
                                     Reporter
                                 </dt>
                                 <dd className="mt-0.5 font-medium">
                                     {report.userId?.name ?? "Unknown"}
                                 </dd>
                             </div>
-                            <div className="rounded-lg bg-[#f4f7f3] px-3 py-2">
-                                <dt className="text-[10px] font-bold uppercase tracking-[.1em] text-[#6d7a71]">
+                            <div className="rounded-lg bg-muted px-3 py-2">
+                                <dt className="text-[10px] font-semibold uppercase tracking-[.14em] text-muted-foreground">
                                     Upvotes
                                 </dt>
                                 <dd className="mt-0.5 font-medium">{report.upVotedBy?.length ?? 0}</dd>
@@ -151,17 +150,17 @@ const ViewTasks = ({ currentReports }: { currentReports: string }) => {
                         {/* Description */}
                         {report.details && (
                             <div>
-                                <p className="text-[10px] font-bold uppercase tracking-[.1em] text-[#6d7a71]">
+                                <p className="text-[10px] font-semibold uppercase tracking-[.14em] text-muted-foreground">
                                     Description
                                 </p>
-                                <p className="mt-1 text-sm leading-5 text-[#17211b]">{report.details}</p>
+                                <p className="mt-1 text-sm leading-5 text-foreground">{report.details}</p>
                             </div>
                         )}
 
                         {/* Media */}
                         {report.media?.length > 0 && (
                             <div>
-                                <p className="text-[10px] font-bold uppercase tracking-[.1em] text-[#6d7a71]">
+                                <p className="text-[10px] font-semibold uppercase tracking-[.14em] text-muted-foreground">
                                     Attachments
                                 </p>
                                 <div className="mt-2 flex gap-2 overflow-x-auto">
@@ -188,8 +187,8 @@ const ViewTasks = ({ currentReports }: { currentReports: string }) => {
 
                         {/* Assigned worker */}
                         {report.assignedTo && (
-                            <div className="rounded-lg border border-[#dfe5dc] bg-white px-3 py-2">
-                                <p className="text-[10px] font-bold uppercase tracking-[.1em] text-[#6d7a71]">
+                            <div className="rounded-lg border border-border bg-card px-3 py-2">
+                                <p className="text-[10px] font-semibold uppercase tracking-[.14em] text-muted-foreground">
                                     Assigned Worker
                                 </p>
                                 <p className="mt-0.5 text-sm font-medium">
@@ -199,12 +198,12 @@ const ViewTasks = ({ currentReports }: { currentReports: string }) => {
                         )}
                     </div>
                 ) : (
-                    <p className="py-6 text-center text-sm text-[#6d7a71]">No report data</p>
+                    <p className="py-6 text-center text-sm text-muted-foreground">No report data</p>
                 )}
 
                 {/* Expense form */}
-                <form className="mt-5 space-y-3 border-t border-[#dfe5dc] pt-5" onSubmit={handleSubmit}>
-                    <label className="block text-xs font-bold uppercase tracking-[.12em] text-[#6d7a71]">
+                <form className="mt-5 space-y-3 border-t border-border pt-5" onSubmit={handleSubmit}>
+                    <label className="block text-xs font-semibold uppercase tracking-[.14em] text-muted-foreground">
                         Amount to be allocated for this
                         <input
                             id="amount"
@@ -212,18 +211,14 @@ const ViewTasks = ({ currentReports }: { currentReports: string }) => {
                             placeholder="e.g. 10000000"
                             required
                             type="number"
-                            className="mt-1.5 w-full rounded-lg border border-[#dfe5dc] bg-white px-3 py-2 text-sm font-normal normal-case tracking-normal text-[#17211b] outline-none focus:border-[#1e5b3e]"
+                            className="mt-1.5 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm font-normal normal-case tracking-normal text-foreground outline-none focus:border-primary"
                         />
                     </label>
 
                     <DialogFooter className="mt-5 flex justify-end gap-2 border-none bg-transparent p-0">
-                        <button
-                            type="submit"
-                            disabled={submitting}
-                            className="rounded-lg bg-[#1e5b3e] px-3 py-2 text-sm font-bold text-white hover:bg-[#174a32] disabled:opacity-60"
-                        >
+                        <Button type="submit" disabled={submitting}>
                             submit
-                        </button>
+                        </Button>
                     </DialogFooter>
                 </form>
             </DialogContent>

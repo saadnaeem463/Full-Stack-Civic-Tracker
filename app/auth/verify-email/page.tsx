@@ -13,7 +13,7 @@ interface verifyEmailPageProps{
 
 async function verifyToken(token : string | undefined){
     if(!token){
-        return {sucess : false , message : "No verification token provided"}
+        return {success : false , message : "No verification token provided"}
     }
 
     await connectDB();
@@ -21,7 +21,7 @@ async function verifyToken(token : string | undefined){
     const user=await User.findOne({verificationToken : token})
 
     if(!user){
-        return {sucess : false , message : "This verification link is invalid or already used"}
+        return {success : false , message : "This verification link is invalid or already used"}
     }
 
     if(user.verificationTokenExpiry && user.verificationTokenExpiry < new Date()){
@@ -44,9 +44,9 @@ export default async function verifyEmailPage({searchParams} : verifyEmailPagePr
     <Card>
       <CardHeader className="items-center text-center">
         {result.success ? (
-          <CheckCircle2 className="size-10 text-green-500" />
+          <CheckCircle2 className="size-10 text-primary" />
         ) : (
-          <XCircle className="size-10 text-red-500" />
+          <XCircle className="size-10 text-destructive" />
         )}
         <CardTitle>{result.success ? "Email Verified" : "Verification Failed"}</CardTitle>
         <CardDescription>{result.message}</CardDescription>

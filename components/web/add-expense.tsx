@@ -7,9 +7,9 @@ import {
   DialogContent,
   DialogHeader,
   DialogDescription,
-  DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 import { ActorProps } from "./admin/ReportPanel";
 
 const AddExpense = ({
@@ -46,7 +46,7 @@ const AddExpense = ({
       console.log(data);
       setCatBudget(data.remainingBudget);
     } catch (error) {
-      setErrors(error);
+      setErrors(error instanceof Error ? error.message : "Failed to fetch category budget");
       console.log("Something went wrong : ", error);
     }
   };
@@ -135,19 +135,19 @@ const AddExpense = ({
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      {
-        <DialogTrigger
-          render={
-            <button className="inline-flex items-center gap-2 self-start rounded-lg bg-[#1e5b3e] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#174a32] sm:self-auto" />
-          }
-        >
-          <PlusIcon size={16} className="-mt-0.5 mr-1 inline" />
-          Add Expense
-        </DialogTrigger>
-      }
+      <DialogTrigger
+        render={
+          <Button variant="outline" size="sm" className="self-start sm:self-auto" />
+        }
+      >
+        <PlusIcon />
+        Add expense
+      </DialogTrigger>
 
-      <DialogContent className="w-full max-w-md rounded-2xl border border-[#dfe5dc] bg-[#fbfcf9] p-5">
-        {errors.length > 0 && <p>{errors}</p>}
+      <DialogContent className="w-full max-w-md rounded-lg border border-border bg-card p-5">
+        {errors.length > 0 && (
+          <p className="rounded-lg bg-destructive/10 px-3 py-2 text-sm font-medium text-destructive">{errors}</p>
+        )}
 
         {budgetExceeded && !requestPending && (
           <div className="mt-2 space-y-2">
@@ -156,34 +156,37 @@ const AddExpense = ({
               onChange={(e) => setRequestNote(e.target.value)}
               placeholder="Why does this category need more budget?"
               required
-              className="w-full rounded-lg border border-[#dfe5dc] bg-white px-3 py-2 text-sm outline-none focus:border-[#1e5b3e]"
+              className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary"
               rows={2}
             />
-            <button
+            <Button
               type="button"
+              variant="outline"
+              size="sm"
               onClick={handleRequestBudget}
-              className="rounded-lg border border-[#1e5b3e] px-3 py-2 text-xs font-bold text-[#1e5b3e] hover:bg-[#eef4ed]"
             >
-              Request Budget Increase
-            </button>
+              Request budget increase
+            </Button>
           </div>
         )}
 
         {requestPending && (
-          <p className="mt-2 text-xs font-bold text-[#5c8069]">
+          <p className="mt-2 text-xs font-medium text-primary">
             Budget request pending admin approval.
           </p>
         )}
         <DialogHeader>
-          <DialogDescription className="text-[11px] font-bold uppercase tracking-[.12em] text-[#6d7a71]">
-            Add Expense
+          <DialogDescription className="text-[11px] font-semibold uppercase tracking-[.14em] text-muted-foreground">
+            Add expense
           </DialogDescription>
-          Remaining Budget is : {catBudget}
+          <p className="text-xs text-muted-foreground">
+            Remaining category budget: <span className="font-medium tabular-nums text-foreground">{catBudget}</span>
+          </p>
         </DialogHeader>
 
         <form ref={formRef} className="mt-4 space-y-3" onSubmit={handleSubmit}>
-          <label className="block text-xs font-bold uppercase tracking-[.12em] text-[#6d7a71]">
-            Amount to be alloacted for this
+          <label className="block text-xs font-semibold uppercase tracking-[.14em] text-muted-foreground">
+            Amount
             <input
               id="amount"
               name="amount"
@@ -192,18 +195,14 @@ const AddExpense = ({
               type="number"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
-              className="mt-1.5 w-full rounded-lg border border-[#dfe5dc] bg-white px-3 py-2 text-sm font-normal normal-case tracking-normal text-[#17211b] outline-none focus:border-[#1e5b3e]"
+              className="mt-1.5 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm font-normal normal-case tracking-normal text-foreground outline-none focus:border-primary"
             />
           </label>
 
           <DialogFooter className="mt-5 flex justify-end gap-2 border-none bg-transparent p-0">
-            <button
-              type="submit"
-              disabled={submitting}
-              className="rounded-lg bg-[#1e5b3e] px-3 py-2 text-sm font-bold text-white hover:bg-[#174a32] disabled:opacity-60"
-            >
-              submit
-            </button>
+            <Button type="submit" disabled={submitting}>
+              Submit
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>

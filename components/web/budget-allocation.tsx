@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { PlusIcon } from "lucide-react";
 import {
     Dialog,
@@ -9,8 +9,9 @@ import {
     DialogDescription,
     DialogFooter,
 } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 
-const BudgetAllocation = ({handleSetBudget} : {handleSetBudget :(amount : number)=>void}) => {
+const BudgetAllocation = ({handleSetBudget, variant = "default"} : {handleSetBudget :(amount : number)=>void, variant?: "default" | "outline"}) => {
     const [submitting, setSubmitting] = useState(false);
     const [error,setError]=useState("")
 
@@ -47,46 +48,43 @@ const BudgetAllocation = ({handleSetBudget} : {handleSetBudget :(amount : number
     return (
         <Dialog>
 
-            {error && <p>{error}</p>}
-            {(
-                <DialogTrigger
-                    render={
-                        <button className="inline-flex items-center gap-2 self-start rounded-lg bg-[#1e5b3e] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#174a32] sm:self-auto" />
-                    }
-                >
-                    <PlusIcon size={16} className="-mt-0.5 mr-1 inline" />
-                    Budget Allocation
-                </DialogTrigger>
-            )}
+            {error && <p className="mb-3 rounded-lg bg-destructive/10 px-3 py-2 text-sm font-medium text-destructive">{error}</p>}
+            <DialogTrigger
+                render={
+                    <Button variant={variant} className="self-start sm:self-auto" />
+                }
+            >
+                <PlusIcon />
+                Add budget
+            </DialogTrigger>
 
-            <DialogContent className="w-full max-w-md rounded-2xl border border-[#dfe5dc] bg-[#fbfcf9] p-5">
+            <DialogContent className="w-full max-w-md rounded-lg border border-border bg-card p-5">
                 <DialogHeader>
-                    <DialogDescription className="text-[11px] font-bold uppercase tracking-[.12em] text-[#6d7a71]">
-                        Decide Budget
+                    <DialogDescription className="text-[11px] font-semibold uppercase tracking-[.14em] text-muted-foreground">
+                        Decide budget
                     </DialogDescription>
                 </DialogHeader>
 
                 <form className="mt-4 space-y-3" onSubmit={handleSubmit}>
-                    <label className="block text-xs font-bold uppercase tracking-[.12em] text-[#6d7a71]">
-                        Amount to be alloacted for this
+                    <label className="block text-xs font-semibold uppercase tracking-[.14em] text-muted-foreground">
+                        Amount to be allocated
                         <input
                             type="number"
                             id="amount"
                             name="amount"
                             placeholder="e.g. 10000000"
                             required
-                            className="mt-1.5 w-full rounded-lg border border-[#dfe5dc] bg-white px-3 py-2 text-sm font-normal normal-case tracking-normal text-[#17211b] outline-none focus:border-[#1e5b3e]"
+                            className="mt-1.5 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm font-normal normal-case tracking-normal text-foreground outline-none focus:border-primary"
                         />
                     </label>
 
                     <DialogFooter className="mt-5 flex justify-end gap-2 border-none bg-transparent p-0">
-                        <button
+                        <Button
                             type="submit"
                             disabled={submitting}
-                            className="rounded-lg bg-[#1e5b3e] px-3 py-2 text-sm font-bold text-white hover:bg-[#174a32] disabled:opacity-60"
                         >
-                            submit
-                        </button>
+                            Submit
+                        </Button>
                     </DialogFooter>
                 </form>
 

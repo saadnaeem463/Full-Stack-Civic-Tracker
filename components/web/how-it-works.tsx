@@ -1,16 +1,15 @@
-import React from "react";
+"use client"
+
+import Link from "next/link"
 import {
   ArrowRightIcon,
   CheckCircle2Icon,
   MapPinIcon,
   ShieldCheckIcon,
-  XIcon,
-} from "lucide-react";
-import Link from "next/link";
-type HowItWorksPageProps = {
-  onClose: () => void;
-  onReport: () => void;
-};
+} from "lucide-react"
+import { Reveal, Stagger, StaggerItem, HoverLift, motion } from "@/components/motion"
+import { buttonVariants } from "@/components/ui/button"
+import { cn } from "@/lib/utils"
 
 const steps = [
   {
@@ -31,146 +30,141 @@ const steps = [
     body: "Follow the reports that matter to you and get updates as an issue is acknowledged, assigned, and resolved.",
     icon: CheckCircle2Icon,
   },
-];
+]
 
-export function HowItWorksPage({ onClose, onReport }: HowItWorksPageProps) {
+const timeline = ["Reported", "Acknowledged", "In progress", "Resolved"]
+const timelineDot = ["bg-destructive", "bg-info", "bg-warning", "bg-success"]
+
+export function HowItWorksPage() {
   return (
-    <div
-      className="fixed inset-0 z-50 overflow-y-auto bg-[#f7f8f4] text-[#17211b]"
-      role="dialog"
-      aria-modal="true"
-      aria-label="How CivicTrack works"
-    >
-      <header className="sticky top-0 z-10 border-b border-[#dfe5dc] bg-[#fbfcf9]/95 backdrop-blur">
-        <div className="mx-auto flex h-[72px] max-w-6xl items-center justify-between px-5 sm:px-8">
-          <Link href={'/'}
-            onClick={onClose}
-            className="flex items-center gap-2 text-sm font-semibold text-[#415047] hover:text-[#1e5b3e]"
-          >
-            <span className="grid h-8 w-8 place-items-center rounded-lg bg-[#e8efe7]">
-              ←
-            </span>{" "}
-            Back to map
-          </Link>
-          <span className="hidden text-xs font-bold uppercase tracking-[.16em] text-[#63816b] sm:block">
-            CivicTrack guide
-          </span>
-        </div>
-      </header>
-      <main>
-        <section className="mx-auto max-w-6xl px-5 pb-16 pt-16 sm:px-8 sm:pb-24 sm:pt-24">
-          <p className="text-xs font-bold uppercase tracking-[.18em] text-[#4f805e]">
-            A clearer way to care for a city
-          </p>
+    <div>
+      {/* Hero */}
+      <section className="relative overflow-hidden border-b border-border">
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(60%_50%_at_20%_0%,color-mix(in_oklch,var(--primary)_14%,transparent),transparent_70%)]"
+        />
+        <div className="mx-auto max-w-6xl px-5 pb-16 pt-14 sm:px-8 sm:pb-24 sm:pt-20">
+          <Reveal>
+            <p className="text-[11px] font-semibold uppercase tracking-[.16em] text-primary">
+              A clearer way to care for a city
+            </p>
+          </Reveal>
           <div className="mt-5 grid gap-10 lg:grid-cols-[1.2fr_.8fr] lg:items-end">
             <div>
-              <h1 className="max-w-3xl font-['Newsreader'] text-[51px] leading-[.97] tracking-[-.055em] sm:text-[76px]">
-                Small reports.
-                <br />
-                Real civic progress.
-              </h1>
-              <p className="mt-7 max-w-xl text-lg leading-8 text-[#5d695f]">
-                CivicTrack connects the people who notice everyday problems with
-                the teams who can fix them—openly, respectfully, and in public
-                view.
-              </p>
+              <Reveal delay={0.05}>
+                <h1 className="max-w-3xl text-4xl font-semibold leading-[1.05] tracking-tight sm:text-6xl">
+                  Small reports.
+                  <br />
+                  <span className="text-primary">Real civic progress.</span>
+                </h1>
+              </Reveal>
+              <Reveal delay={0.12}>
+                <p className="mt-6 max-w-xl text-base leading-7 text-muted-foreground sm:text-lg sm:leading-8">
+                  CivicTrack connects the people who notice everyday problems with the teams who
+                  can fix them — openly, respectfully, and in public view.
+                </p>
+              </Reveal>
+              <Reveal delay={0.18}>
+                <Link href="/" className={cn(buttonVariants({ size: "lg" }), "mt-8 h-10 gap-2 px-4")}>
+                  Open the map <ArrowRightIcon size={16} aria-hidden="true" />
+                </Link>
+              </Reveal>
             </div>
-            <aside className="rounded-2xl border border-[#cfddcf] bg-[#e8f1e7] p-6">
-              <span className="grid h-10 w-10 place-items-center rounded-xl bg-[#1e5b3e] text-white">
-                <CheckCircle2Icon size={20} />
-              </span>
-              <h2 className="mt-4 text-lg font-bold">Built for everyone</h2>
-              <p className="mt-2 text-sm leading-6 text-[#506152]">
-                Maps are only one way in. You can search, browse reports as a
-                list, and use every core action with a keyboard.
-              </p>
-            </aside>
+            <Reveal delay={0.2}>
+              <aside className="rounded-xl border border-border bg-card p-6 shadow-xs">
+                <span className="grid h-10 w-10 place-items-center rounded-lg bg-primary text-primary-foreground">
+                  <CheckCircle2Icon size={20} aria-hidden="true" />
+                </span>
+                <h2 className="mt-4 text-lg font-semibold">Built for everyone</h2>
+                <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                  Maps are only one way in. You can search, browse reports as a list, and use every
+                  core action with a keyboard.
+                </p>
+              </aside>
+            </Reveal>
           </div>
-        </section>
-        <section className="border-y border-[#dfe5dc] bg-white">
-          <div className="mx-auto max-w-6xl px-5 py-14 sm:px-8 sm:py-20">
-            <div className="mb-10 max-w-md">
-              <p className="text-xs font-bold uppercase tracking-[.15em] text-[#63816b]">
-                The process
-              </p>
-              <h2 className="mt-2 font-['Newsreader'] text-[39px] leading-none tracking-[-.04em]">
-                From observation to outcome.
-              </h2>
-            </div>
-            <div className="grid gap-8 md:grid-cols-3">
-              {steps.map((step) => {
-                const Icon = step.icon;
-                return (
-                  <article
-                    key={step.number}
-                    className="border-t-2 border-[#b9d0b9] pt-5"
-                  >
+        </div>
+      </section>
+
+      {/* Process */}
+      <section className="border-b border-border bg-card">
+        <div className="mx-auto max-w-6xl px-5 py-14 sm:px-8 sm:py-20">
+          <Reveal inView className="mb-10 max-w-md">
+            <p className="text-[11px] font-semibold uppercase tracking-[.16em] text-muted-foreground">
+              The process
+            </p>
+            <h2 className="mt-2 text-3xl font-semibold tracking-tight">From observation to outcome.</h2>
+          </Reveal>
+          <Stagger inView className="grid gap-8 md:grid-cols-3">
+            {steps.map((step) => {
+              const Icon = step.icon
+              return (
+                <StaggerItem key={step.number}>
+                  <HoverLift className="h-full rounded-xl border border-border bg-background p-6">
                     <div className="flex items-center justify-between">
-                      <span className="font-mono text-xs font-bold text-[#4e7b59]">
-                        {step.number}
-                      </span>
-                      <span className="grid h-10 w-10 place-items-center rounded-xl bg-[#eef5ed] text-[#286244]">
-                        <Icon size={20} />
+                      <span className="font-mono text-xs font-semibold text-primary">{step.number}</span>
+                      <span className="grid h-10 w-10 place-items-center rounded-lg bg-primary/10 text-primary">
+                        <Icon size={20} aria-hidden="true" />
                       </span>
                     </div>
-                    <h3 className="mt-7 text-xl font-bold tracking-[-.025em]">
-                      {step.title}
-                    </h3>
-                    <p className="mt-3 text-sm leading-6 text-[#657067]">
-                      {step.body}
-                    </p>
-                  </article>
-                );
-              })}
-            </div>
-          </div>
-        </section>
-        <section className="mx-auto max-w-6xl px-5 py-16 sm:px-8 sm:py-24">
-          <div className="grid overflow-hidden rounded-2xl bg-[#1d4f36] text-white lg:grid-cols-2">
+                    <h3 className="mt-6 text-lg font-semibold tracking-tight">{step.title}</h3>
+                    <p className="mt-2.5 text-sm leading-6 text-muted-foreground">{step.body}</p>
+                  </HoverLift>
+                </StaggerItem>
+              )
+            })}
+          </Stagger>
+        </div>
+      </section>
+
+      {/* After you report */}
+      <section className="mx-auto max-w-6xl px-5 py-16 sm:px-8 sm:py-24">
+        <Reveal inView>
+          <div className="grid overflow-hidden rounded-2xl border border-border bg-card lg:grid-cols-2">
             <div className="p-8 sm:p-12">
-              <p className="text-xs font-bold uppercase tracking-[.16em] text-[#b9d7bd]">
+              <p className="text-[11px] font-semibold uppercase tracking-[.16em] text-primary">
                 What happens after you report
               </p>
-              <h2 className="mt-3 font-['Newsreader'] text-[42px] leading-[1.02] tracking-[-.04em]">
+              <h2 className="mt-3 text-3xl font-semibold leading-tight tracking-tight sm:text-4xl">
                 No report disappears into a void.
               </h2>
-              <p className="mt-5 max-w-md text-sm leading-6 text-[#d3e4d5]">
-                Every issue starts with a public status. Officials update the
-                timeline as work is scheduled, underway, and complete—so you
-                always know what’s next.
+              <p className="mt-5 max-w-md text-sm leading-6 text-muted-foreground">
+                Every issue starts with a public status. Officials update the timeline as work is
+                scheduled, underway, and complete — so you always know what&apos;s next.
               </p>
-              <button
-                onClick={onReport}
-                className="mt-8 inline-flex items-center gap-2 rounded-lg bg-white px-4 py-2.5 text-sm font-bold text-[#1e5b3e] hover:bg-[#edf5ec]"
-              >
-                Report an issue <ArrowRightIcon size={16} />
-              </button>
+              <Link href="/" className={cn(buttonVariants({ size: "lg" }), "mt-8 h-10 gap-2 px-4")}>
+                Report an issue <ArrowRightIcon size={16} aria-hidden="true" />
+              </Link>
             </div>
-            <div className="flex items-center bg-[#285e41] p-8 sm:p-12">
-              <div className="w-full space-y-3">
-                {["Reported", "Acknowledged", "In progress", "Resolved"].map(
-                  (status, index) => (
-                    <div
-                      key={status}
-                      className={`flex items-center gap-3 rounded-lg px-4 py-3 ${index === 2 ? "bg-white text-[#1e5b3e] shadow-lg" : "bg-white/10 text-white"}`}
-                    >
-                      <span
-                        className={`h-2.5 w-2.5 rounded-full ${index === 3 ? "bg-emerald-300" : index === 2 ? "bg-blue-500" : "bg-[#b9d7bd]"}`}
-                      />
-                      <span className="text-sm font-semibold">{status}</span>
-                      {index === 2 && (
-                        <span className="ml-auto text-xs font-medium text-[#5c7865]">
-                          Crew assigned
-                        </span>
-                      )}
-                    </div>
-                  ),
-                )}
-              </div>
+            <div className="flex items-center bg-muted/60 p-8 sm:p-12">
+              <ol className="w-full space-y-3">
+                {timeline.map((status, index) => (
+                  <motion.li
+                    key={status}
+                    initial={{ opacity: 0, x: 16 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: 0.1 + index * 0.1, duration: 0.35 }}
+                    className={cn(
+                      "flex items-center gap-3 rounded-lg border px-4 py-3",
+                      index === 2
+                        ? "border-primary/30 bg-card shadow-sm"
+                        : "border-border bg-card/60"
+                    )}
+                  >
+                    <span className={cn("h-2.5 w-2.5 rounded-full", timelineDot[index])} />
+                    <span className="text-sm font-semibold">{status}</span>
+                    {index === 2 && (
+                      <span className="ml-auto text-xs font-medium text-muted-foreground">Crew assigned</span>
+                    )}
+                  </motion.li>
+                ))}
+              </ol>
             </div>
           </div>
-        </section>
-      </main>
+        </Reveal>
+      </section>
     </div>
-  );
+  )
 }

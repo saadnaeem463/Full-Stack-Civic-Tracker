@@ -9,15 +9,16 @@ import markerIcon from "leaflet/dist/images/marker-icon.png"
 import markerShadow from "leaflet/dist/images/marker-shadow.png"
 import "leaflet/dist/leaflet.css"
 import { ReportMarker } from "./markers"
+import type { MapReport } from "@/types/report"
 
 // Leaflet's default marker icons break under bundlers like webpack/Next — fix once, here.
 // Bundled locally via import instead of an external CDN, so ad-blockers / Brave Shields
 // can't silently block the icon requests.
-delete (L.Icon.Default.prototype as any)._getIconUrl
+delete (L.Icon.Default.prototype as unknown as Record<string, unknown>)._getIconUrl
 L.Icon.Default.mergeOptions({
-  iconRetinaUrl: (markerIcon2x as any).src ?? markerIcon2x,
-  iconUrl: (markerIcon as any).src ?? markerIcon,
-  shadowUrl: (markerShadow as any).src ?? markerShadow,
+  iconRetinaUrl: (markerIcon2x as { src?: string }).src ?? (markerIcon2x as unknown as string),
+  iconUrl: (markerIcon as { src?: string }).src ?? (markerIcon as unknown as string),
+  shadowUrl: (markerShadow as { src?: string }).src ?? (markerShadow as unknown as string),
 })
 
 // Example: scoping to one city — Karachi's rough bounding box
@@ -28,20 +29,7 @@ const CITY_BOUNDS: [[number, number], [number, number]] = [
 ]
 
 const PADDED_BOUNDS = L.latLngBounds(CITY_BOUNDS).pad(0.15)
-interface Report {
-  _id: string
-  lat: number
-  lng: number
-  title: string
-  location: string
-  createdAt: string
-   media?: { url: string; type: string }[]
-  status: "open" | "in-progress" | "resolved"
-  upvoteCount: number
-  commentCount: number
-}
-
-function FitToReports({ reports }: { reports: Report[] }) {
+function FitToReports({ reports }: { reports: MapReport[] }) {
   const map = useMap();
 
   // Leaflet measures its container's size once, at mount. If the surrounding layout
@@ -55,7 +43,7 @@ function FitToReports({ reports }: { reports: Report[] }) {
   return null;
 }
 
-export function CivicMap({ reports }: { reports: Report[] }) {
+export function CivicMap({ reports }: { reports: MapReport[] }) {
   const safeReports = reports ?? [];
 
   return (

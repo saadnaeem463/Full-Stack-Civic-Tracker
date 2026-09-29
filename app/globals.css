@@ -1,18 +1,15 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&display=swap');
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
-body { background: #f7f8f4; color: #17211b; font-family: 'DM Sans', sans-serif; }
-.font-display { font-family: 'Newsreader', Georgia, serif; }
-
+/* Dark mode: next-themes toggles the `.dark` class on <html> */
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
   --font-heading: var(--font-sans);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
@@ -31,6 +28,9 @@ body { background: #f7f8f4; color: #17211b; font-family: 'DM Sans', sans-serif; 
   --color-input: var(--input);
   --color-border: var(--border);
   --color-destructive: var(--destructive);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-info: var(--info);
   --color-accent-foreground: var(--accent-foreground);
   --color-accent: var(--accent);
   --color-muted-foreground: var(--muted-foreground);
@@ -43,82 +43,94 @@ body { background: #f7f8f4; color: #17211b; font-family: 'DM Sans', sans-serif; 
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
+  /* Single radius scale: rounded-lg === rounded-xl (10px) so surfaces,
+     controls and overlays all render the same corner radius. */
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) * 1.4);
-  --radius-2xl: calc(var(--radius) * 1.8);
-  --radius-3xl: calc(var(--radius) * 2.2);
-  --radius-4xl: calc(var(--radius) * 2.6);
+  --radius-xl: var(--radius);
+  --radius-2xl: calc(var(--radius) * 1.4);
+  --radius-3xl: calc(var(--radius) * 1.8);
+  --radius-4xl: calc(var(--radius) * 2.2);
 }
 
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
+  /* Canvas: off-white, cards: white (elevation via contrast, not shadow) */
+  --background: oklch(0.984 0.003 260);
+  --foreground: oklch(0.216 0.034 264);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
+  --card-foreground: oklch(0.216 0.034 264);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
+  --popover-foreground: oklch(0.216 0.034 264);
+  /* Single strong accent: deep indigo — primary buttons, active nav,
+     links and focus rings only */
+  --primary: oklch(0.511 0.262 276.966);
+  --primary-foreground: oklch(0.985 0.002 264);
+  --secondary: oklch(0.957 0.005 260);
+  --secondary-foreground: oklch(0.216 0.034 264);
+  --muted: oklch(0.957 0.005 260);
+  --muted-foreground: oklch(0.52 0.03 260);
+  --accent: oklch(0.957 0.005 260);
+  --accent-foreground: oklch(0.216 0.034 264);
   --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
+  /* Semantic status colors — badges/alerts only, never decoration */
+  --success: oklch(0.627 0.194 149.214);
+  --warning: oklch(0.681 0.162 75.834);
+  --info: oklch(0.588 0.158 237.323);
+  --border: oklch(0.917 0.008 260);
+  --input: oklch(0.917 0.008 260);
+  --ring: oklch(0.511 0.262 276.966);
+  --chart-1: oklch(0.511 0.262 276.966);
+  --chart-2: oklch(0.588 0.158 237.323);
+  --chart-3: oklch(0.627 0.194 149.214);
+  --chart-4: oklch(0.681 0.162 75.834);
+  --chart-5: oklch(0.577 0.245 27.325);
   --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --sidebar: oklch(0.984 0.003 260);
+  --sidebar-foreground: oklch(0.216 0.034 264);
+  --sidebar-primary: oklch(0.511 0.262 276.966);
+  --sidebar-primary-foreground: oklch(0.985 0.002 264);
+  --sidebar-accent: oklch(0.957 0.005 260);
+  --sidebar-accent-foreground: oklch(0.216 0.034 264);
+  --sidebar-border: oklch(0.917 0.008 260);
+  --sidebar-ring: oklch(0.511 0.262 276.966);
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
+  --background: oklch(0.141 0.028 265);
+  --foreground: oklch(0.93 0.01 260);
+  --card: oklch(0.185 0.03 265);
+  --card-foreground: oklch(0.93 0.01 260);
+  --popover: oklch(0.185 0.03 265);
+  --popover-foreground: oklch(0.93 0.01 260);
+  --primary: oklch(0.585 0.233 277.117);
+  --primary-foreground: oklch(0.985 0.002 264);
+  --secondary: oklch(0.24 0.03 265);
+  --secondary-foreground: oklch(0.93 0.01 260);
+  --muted: oklch(0.24 0.03 265);
+  --muted-foreground: oklch(0.65 0.02 260);
+  --accent: oklch(0.24 0.03 265);
+  --accent-foreground: oklch(0.93 0.01 260);
   --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
+  --success: oklch(0.723 0.219 149.579);
+  --warning: oklch(0.769 0.188 70.08);
+  --info: oklch(0.685 0.169 237.323);
+  --border: oklch(1 0 0 / 12%);
   --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --ring: oklch(0.585 0.233 277.117);
+  --chart-1: oklch(0.585 0.233 277.117);
+  --chart-2: oklch(0.685 0.169 237.323);
+  --chart-3: oklch(0.723 0.219 149.579);
+  --chart-4: oklch(0.769 0.188 70.08);
+  --chart-5: oklch(0.704 0.191 22.216);
+  --sidebar: oklch(0.17 0.03 265);
+  --sidebar-foreground: oklch(0.93 0.01 260);
+  --sidebar-primary: oklch(0.585 0.233 277.117);
+  --sidebar-primary-foreground: oklch(0.985 0.002 264);
+  --sidebar-accent: oklch(0.24 0.03 265);
+  --sidebar-accent-foreground: oklch(0.93 0.01 260);
+  --sidebar-border: oklch(1 0 0 / 12%);
+  --sidebar-ring: oklch(0.585 0.233 277.117);
 }
 
 @layer base {
@@ -131,6 +143,12 @@ body { background: #f7f8f4; color: #17211b; font-family: 'DM Sans', sans-serif; 
   html {
     @apply font-sans;
   }
+}
+
+/* `.font-display` used to load the Newsreader serif from Google Fonts and
+   clashed with the UI font. Display headings now use the same sans stack. */
+.font-display {
+  font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
 }
 
 .leaflet-popup-content-wrapper {

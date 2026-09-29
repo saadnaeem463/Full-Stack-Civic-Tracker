@@ -6,6 +6,7 @@ import { AuditLog } from "@/models/audit-log";
 import { User } from "@/models/user";
 import { pusherServer } from "@/lib/pusher";
 import { BUDGET_CHANNEL,NEW_BUDGET_REQUEST_EVENT,BUDGET_REQUEST_RESOLVED_EVENT } from "@/lib/pusher-events";
+import { notify } from "@/lib/notifications";
 export async function GET(req:NextRequest){
     try{
         await connectDB()
@@ -100,14 +101,34 @@ export async function PATCH(req: NextRequest) {
         await AuditLog.create({
             actorId : admin.userId,
             actorRole:admin.role,
-            actorName :status === "Approved" ? "budget_allocated" : "budget_rejected",
-            action : "budget_requested",
+            actorName : actor?.name ?? "An admin",
+            action : status === "Approved" ? "budget_allocated" : "budget_rejected",
             message: `${actor?.name ?? "An admin"} ${status.toLowerCase()} the budget request for ${budgetRequest.category}`}
         )
 
         pusherServer
         .trigger(BUDGET_CHANNEL,NEW_BUDGET_REQUEST_EVENT,{requestId,category : budgetRequest.category,status})
         .catch((err) => console.log("Pusher trigger failed:", err));
+
+        // Tell the moderator/admin who filed the request, and every other admin, what happened
+        const requesterId = budgetRequest.requestedBy?.toString()
+        if (requesterId && requesterId !== String(admin.userId)) {
+            await notify({
+                recipient: requesterId,
+                type: "status_change",
+                triggeredBy: admin.userId,
+                message: `Your budget request for ${budgetRequest.category} was ${status.toLowerCase()} by ${actor?.name ?? "an admin"}`,
+            })
+        }
+        const otherAdmins = await User.find({ role: "admin", _id: { $ne: admin.userId } })
+        for (const otherAdmin of otherAdmins) {
+            await notify({
+                recipient: otherAdmin._id.toString(),
+                type: "status_change",
+                triggeredBy: admin.userId,
+                message: `Budget request for ${budgetRequest.category} was ${status.toLowerCase()} by ${actor?.name ?? "an admin"}`,
+            })
+        }
 
         return NextResponse.json({ message: `Request ${status.toLowerCase()}`, request: budgetRequest });
     } catch (error) {

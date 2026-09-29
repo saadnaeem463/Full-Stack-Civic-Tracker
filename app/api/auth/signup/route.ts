@@ -43,7 +43,7 @@ export async function POST(request:Request){
 
 
         //TODO : 
-        //later implement this shit
+        // TODO: send the verification email here
         // const verifyUrl=`${process.env.NEXT_PUBLIC_APP_URL}/auth/verify-email?token=${verificationToken}`
 
         // const {error}=await resend.emails.send({

@@ -1,5 +1,7 @@
 "use client"
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
+import Link from "next/link"
+import { usePathname } from "next/navigation"
 import {
   LayoutDashboardIcon,
   ClipboardListIcon,
@@ -8,6 +10,7 @@ import {
   BarChart3Icon,
   SettingsIcon,
   MapIcon,
+  InboxIcon,
 } from "lucide-react"
 import {
   Sidebar,
@@ -19,72 +22,126 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  useSidebar,
 } from "@/components/ui/sidebar"
+import { buttonVariants } from "@/components/ui/button"
 import { getMe } from "@/lib/services/auth.services"
+import { pusherClient, REPORTS_CHANNEL, NEW_REPORT_EVENT, REPORT_UPDATED_EVENT, REPORT_DELETED_EVENT } from "@/lib/pusher-client"
 import type { User } from "@/types/user"
-import { useRouter, usePathname } from "next/navigation"
+import { motion } from "@/components/motion"
+import { cn } from "@/lib/utils"
 
 const navItems = [
   { label: "Dashboard", Icon: LayoutDashboardIcon },
   { label: "Reports", Icon: ClipboardListIcon },
-  { label: "Workers", Icon: UsersIcon},
-  { label: "Budget", Icon: WalletIcon,adminOnly :true },
+  { label: "Workers", Icon: UsersIcon },
+  { label: "Budget", Icon: WalletIcon, adminOnly: true },
   { label: "Analytics", Icon: BarChart3Icon },
-  { label: "Settings", Icon: SettingsIcon,adminOnly :true },
+  { label: "Settings", Icon: SettingsIcon, adminOnly: true },
 ]
 
+/**
+ * One sidebar for every staff role. Admins and moderators share the same collapsible
+ * layout; `adminOnly` items are simply filtered out for moderators.
+ */
 export function AppSidebar() {
   const [user, setUser] = useState<User | null>(null)
-  const router = useRouter()
+  const [awaiting, setAwaiting] = useState(0)
   const pathname = usePathname()
+  const { setOpenMobile } = useSidebar()
+  const isStaff = user?.role === "admin" || user?.role === "moderator"
 
   useEffect(() => {
     getMe().then((res) => setUser(res.user)).catch(() => {})
   }, [])
 
-  if (user?.role !== "admin" && user?.role !=="moderator" ) return null
+  // real number of reports nobody has picked up yet (kept live over Pusher)
+  const loadAwaiting = useCallback(() => {
+    fetch("/api/reports")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (!data) return
+        const list: { status?: string }[] = data.reports ?? []
+        setAwaiting(list.filter((r) => (r.status ?? "Reported") === "Reported").length)
+      })
+      .catch(() => {})
+  }, [])
 
-  const visibleItems=navItems.filter((item)=> !item.adminOnly || user?.role==='admin')
+  useEffect(() => {
+    if (!isStaff) return
+    loadAwaiting()
+    const channel = pusherClient.subscribe(REPORTS_CHANNEL)
+    channel.bind(NEW_REPORT_EVENT, loadAwaiting)
+    channel.bind(REPORT_UPDATED_EVENT, loadAwaiting)
+    channel.bind(REPORT_DELETED_EVENT, loadAwaiting)
+    return () => {
+      channel.unbind(NEW_REPORT_EVENT, loadAwaiting)
+      channel.unbind(REPORT_UPDATED_EVENT, loadAwaiting)
+      channel.unbind(REPORT_DELETED_EVENT, loadAwaiting)
+      pusherClient.unsubscribe(REPORTS_CHANNEL)
+    }
+  }, [isStaff, loadAwaiting])
+
+  if (!isStaff) return null
+
+  const visibleItems = navItems.filter((item) => !item.adminOnly || user?.role === "admin")
 
   return (
-    <Sidebar collapsible="offcanvas" className="border-r border-[#dfe5dc] bg-[#fbfcf9]">
-      <SidebarHeader className="px-3 py-4">
-        <div className="flex items-center gap-2.5 px-1">
-          <span className="grid h-9 w-9 place-items-center rounded-xl bg-[#1e5b3e] text-white">
+    <Sidebar collapsible="icon" className="border-r border-border bg-sidebar">
+      <SidebarHeader className="overflow-hidden px-3 py-3.5 group-data-[collapsible=icon]:px-1">
+        <Link href="/" className="flex items-center gap-2.5 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60" aria-label="CivicTrack home">
+          <motion.span
+            whileHover={{ rotate: -8, scale: 1.06 }}
+            transition={{ type: "spring", stiffness: 400, damping: 15 }}
+            className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-primary text-primary-foreground shadow-sm group-data-[collapsible=icon]:h-8 group-data-[collapsible=icon]:w-8"
+          >
             <MapIcon size={18} strokeWidth={2.3} />
-          </span>
-          <span>
-            <span className="block text-lg font-semibold leading-5 tracking-[-.03em] text-[#17211b]">
-              CivicTrack
-            </span>
-            <span className="block text-[10px] font-bold uppercase tracking-[.14em] text-[#6d8a75]">
-              Staff portal
+          </motion.span>
+          <span className="min-w-0 group-data-[collapsible=icon]:hidden">
+            <span className="block text-base font-semibold leading-5 tracking-[-.03em] text-foreground">CivicTrack</span>
+            <span className="block text-[10px] font-semibold uppercase tracking-[.14em] text-muted-foreground">
+              {user?.role === "admin" ? "Admin portal" : "Moderator portal"}
             </span>
           </span>
-        </div>
+        </Link>
       </SidebarHeader>
 
-      <SidebarContent className="px-3">
-        <SidebarGroup>
+      <SidebarContent className="px-3 group-data-[collapsible=icon]:px-1">
+        <SidebarGroup className="group-data-[collapsible=icon]:p-1">
           <SidebarGroupContent>
             <SidebarMenu>
-              {visibleItems.map(({ label, Icon }) => {
-                const slug = label.toLowerCase()
-                const active = pathname === `/admin/${slug}`
+              {visibleItems.map(({ label, Icon }, index) => {
+                const href = `/admin/${label.toLowerCase()}`
+                const active = pathname === href || pathname?.startsWith(`${href}/`)
                 return (
                   <SidebarMenuItem key={label}>
-                    <SidebarMenuButton
-                      isActive={active}
-                      onClick={() => router.push(`/admin/${slug}`)}
-                      className={`gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold transition-colors ${
-                        active
-                          ? "bg-[#1e5b3e] text-white hover:bg-[#1e5b3e] hover:text-white data-[active=true]:bg-[#1e5b3e] data-[active=true]:text-white"
-                          : "text-[#44534a] hover:bg-[#eef3ed]"
-                      }`}
+                    <motion.div
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.05 + index * 0.05 }}
                     >
-                      <Icon size={17} aria-hidden="true" />
-                      <span>{label}</span>
-                    </SidebarMenuButton>
+                      <SidebarMenuButton
+                        isActive={active}
+                        tooltip={label}
+                        render={<Link href={href} onClick={() => setOpenMobile(false)} aria-current={active ? "page" : undefined} />}
+                        className={cn(
+                          "relative gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold transition-colors",
+                          active
+                            ? "bg-transparent text-primary-foreground hover:bg-transparent hover:text-primary-foreground data-[active=true]:bg-transparent data-[active=true]:text-primary-foreground"
+                            : "text-muted-foreground hover:bg-accent hover:text-foreground"
+                        )}
+                      >
+                        {active && (
+                          <motion.span
+                            layoutId="sidebar-active-pill"
+                            className="absolute inset-0 rounded-lg bg-primary shadow-sm"
+                            transition={{ type: "spring", stiffness: 420, damping: 34 }}
+                          />
+                        )}
+                        <Icon size={17} aria-hidden="true" className="relative z-10 shrink-0" />
+                        <span className="relative z-10">{label}</span>
+                      </SidebarMenuButton>
+                    </motion.div>
                   </SidebarMenuItem>
                 )
               })}
@@ -93,19 +150,30 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="px-3 pb-4">
-        <div className="rounded-xl border border-[#dfe5dc] bg-[#e8f1e7] p-4">
-          <p className="mt-1.5 text-sm leading-5 text-[#3f5546]">
-            2 open reports breach their response window today.
-          </p>
-          <button
-            onClick={() => router.push("/admin/reports")}
-            className="mt-3 w-full rounded-lg bg-[#1e5b3e] py-2 text-xs font-bold text-white hover:bg-[#174a32]"
+      {awaiting > 0 && (
+        <SidebarFooter className="px-3 pb-4 group-data-[collapsible=icon]:hidden">
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="rounded-lg border border-primary/20 bg-primary/10 p-4"
           >
-            Review queue
-          </button>
-        </div>
-      </SidebarFooter>
+            <p className="flex items-center gap-2 text-xs font-semibold text-foreground">
+              <InboxIcon size={14} className="text-primary" aria-hidden="true" />
+              {awaiting} {awaiting === 1 ? "report is" : "reports are"} waiting
+            </p>
+            <p className="mt-1 text-xs leading-5 text-muted-foreground">
+              Nobody has acknowledged {awaiting === 1 ? "it" : "them"} yet.
+            </p>
+            <Link
+              href="/admin/reports"
+              onClick={() => setOpenMobile(false)}
+              className={cn(buttonVariants({ variant: "outline", size: "sm" }), "mt-3 w-full")}
+            >
+              Review queue
+            </Link>
+          </motion.div>
+        </SidebarFooter>
+      )}
     </Sidebar>
   )
 }

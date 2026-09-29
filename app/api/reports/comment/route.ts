@@ -6,6 +6,7 @@ import { verifyToken } from "@/lib/jwt";
 import { User } from "@/models/user";
 import {COMMENTS_CHANNEL,NEW_COMMENTS_EVENT} from "@/lib/pusher-events"
 import { pusherServer } from "@/lib/pusher";
+import { notify } from "@/lib/notifications";
 
 interface PayloadProps {
   comment: string;
@@ -47,6 +48,16 @@ export async function POST(req: NextRequest) {
         createdAt:newComment.createdAt,
         reportId: findReport._id
     })
+
+    if(findReport.userId.toString()!==decode.userId){
+      await notify({
+        recipient : findReport.userId,
+        type : "comment",
+        report : findReport._id,
+        triggeredBy : decode.userId,
+        message : `${user.name} commented on your report "${findReport.title}"`
+      })
+    }
 
     return NextResponse.json({ payload: payload });
   } catch (err) {

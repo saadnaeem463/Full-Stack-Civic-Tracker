@@ -28,17 +28,17 @@ const Dialog13 = () => {
       <DialogTrigger>
         <Button
           variant="outline"
-          className="rounded-xl border border-teal-200 bg-teal-50 px-6 py-2 font-medium text-teal-800 transition-all hover:bg-teal-100 dark:border-cyan-800 dark:bg-cyan-950 dark:text-cyan-100 dark:hover:bg-cyan-900"
+          className="rounded-xl border border-primary/20 bg-primary/10 px-6 py-2 font-medium text-primary transition-all hover:bg-primary/15"
         >
           Sign Up
         </Button>
       </DialogTrigger>
-      <DialogContent className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-xl sm:max-w-md dark:border-zinc-800 dark:bg-zinc-900">
+      <DialogContent className="rounded-2xl border border-border bg-popover p-6 shadow-xl sm:max-w-md">
         <DialogHeader className="space-y-1.5 text-left">
-          <DialogTitle className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">
+          <DialogTitle className="text-2xl font-bold text-foreground">
             Create your account
           </DialogTitle>
-          <DialogDescription className="text-sm text-zinc-600 dark:text-zinc-400">
+          <DialogDescription className="text-sm text-muted-foreground">
             Sign up free to get started, no card needed.
           </DialogDescription>
         </DialogHeader>
@@ -86,26 +86,26 @@ const Dialog13 = () => {
           <div className="mt-1 flex items-start gap-3">
             <Checkbox
               id={id}
-              className="mt-0.5 focus-visible:ring-teal-600/20 data-[state=checked]:border-teal-600 data-[state=checked]:bg-teal-600 dark:focus-visible:ring-cyan-500/40 dark:data-[state=checked]:border-cyan-500 dark:data-[state=checked]:bg-cyan-500"
+              className="mt-0.5 focus-visible:ring-ring data-[state=checked]:border-primary/20 data-[state=checked]:bg-primary"
               defaultChecked
               required
             />
             <Label
               htmlFor={id}
-              className="block text-sm leading-snug font-normal text-zinc-600 dark:text-zinc-300"
+              className="block text-sm leading-snug font-normal text-muted-foreground"
             >
               <span className="inline">
                 I agree to the{' '}
                 <a
                   href="#"
-                  className="font-medium text-zinc-900 underline transition-colors hover:no-underline dark:text-zinc-100"
+                  className="font-medium text-foreground underline transition-colors hover:no-underline"
                 >
                   Terms of Service
                 </a>{' '}
                 and{' '}
                 <a
                   href="#"
-                  className="font-medium text-zinc-900 underline transition-colors hover:no-underline dark:text-zinc-100"
+                  className="font-medium text-foreground underline transition-colors hover:no-underline"
                 >
                   Privacy Policy
                 </a>
@@ -115,18 +115,18 @@ const Dialog13 = () => {
           <DialogFooter className="m-0 mt-2 flex-col gap-3 border-none bg-transparent p-0 pt-4 sm:flex-col">
             <Button
               type="submit"
-              className="w-full rounded-xl bg-teal-600 py-2.5 font-semibold text-white shadow-md transition-all hover:bg-teal-700 focus-visible:ring-teal-600 dark:bg-cyan-600 dark:hover:bg-cyan-700 dark:focus-visible:ring-cyan-500"
+              className="w-full rounded-xl bg-primary py-2.5 font-semibold text-white shadow-md transition-all hover:bg-primary/90 focus-visible:ring-ring"
             >
               Create account
             </Button>
-            <div className="flex items-center gap-4 before:h-px before:flex-1 before:bg-zinc-200 after:h-px after:flex-1 after:bg-zinc-200 dark:before:bg-zinc-700 dark:after:bg-zinc-700">
-              <span className="text-xs font-medium tracking-wider text-zinc-400 uppercase dark:text-zinc-500">
+            <div className="flex items-center gap-4 before:h-px before:flex-1 before:bg-muted after:h-px after:flex-1 after:bg-muted">
+              <span className="text-xs font-medium tracking-wider text-muted-foreground uppercase">
                 Or sign up with
               </span>
             </div>
             <Button
               variant="outline"
-              className="flex w-full items-center gap-2 rounded-xl border border-zinc-200 bg-white py-2.5 font-medium text-zinc-900 shadow-sm transition-all hover:bg-zinc-50 focus-visible:ring-teal-600 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:hover:bg-zinc-800 dark:focus-visible:ring-cyan-500"
+              className="flex w-full items-center gap-2 rounded-xl border border-border bg-card py-2.5 font-medium text-foreground shadow-sm transition-all hover:bg-muted focus-visible:ring-ring"
             >
               <img
                 src="https://api.iconify.design/logos:google-icon.svg"

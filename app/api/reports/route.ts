@@ -6,6 +6,8 @@ import { cookies } from "next/headers";
 import { reportForm } from "@/app/schemas/auth";
 import { pusherServer } from "@/lib/pusher";
 import { REPORTS_CHANNEL,NEW_REPORT_EVENT } from "@/lib/pusher-events";
+import { User } from "@/models/user";
+import { notify } from "@/lib/notifications";
 
 export async function POST(request:Request){
     const cookiesStore=await cookies()
@@ -44,6 +46,22 @@ export async function POST(request:Request){
         pusherServer
         .trigger(REPORTS_CHANNEL,NEW_REPORT_EVENT,report)
         .catch((pusherErr) => console.error("Pusher trigger failed:", pusherErr));
+
+        // Fan out to every staff member (admins AND moderators) at write time
+        const reporter=await User.findById(user.userId)
+        const staff=await User.find({role : {$in : ["admin","moderator"]}})
+        for(const member of staff){
+            // no point telling a staff member about a report they filed themselves
+            if(member._id.toString()===String(user.userId)) continue
+            await notify({
+                recipient : member._id.toString(),
+                type : "new_report",
+                report : report._id.toString(),
+                triggeredBy : user.userId,
+                message : `New report "${report.title}" submitted by ${reporter?.name ?? "a citizen"}`
+            })
+        }
+
         return Response.json({report});
     }catch(err){
         console.error("Create report failed:", err);

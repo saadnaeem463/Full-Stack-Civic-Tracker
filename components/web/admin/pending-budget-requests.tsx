@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
 
 interface BudgetRequestProp {
   _id: string;
@@ -126,41 +127,42 @@ const PendingBudgetRequests = ({ onResolved }: { onResolved?: () => void }) => {
   if (loading || requests.length === 0) return null;
 
   return (
-    <div className="mb-4 rounded-2xl border border-[#e8d3d1] bg-[#fbf1f0] p-6">
-      <p className="font-medium text-neutral-900">Pending budget requests</p>
-      <p className="mb-4 text-sm text-neutral-500">
+    <div className="mb-4 rounded-lg border border-destructive/20 bg-destructive/10 p-5 shadow-xs">
+      <p className="text-sm font-semibold tracking-tight text-foreground">Pending budget requests</p>
+      <p className="mb-4 mt-1 text-xs text-muted-foreground">
         {requests.length} categor{requests.length === 1 ? "y needs" : "ies need"} a budget decision.
       </p>
 
       <div className="space-y-3">
         {requests.map((request) => (
-          <div key={request._id} className="rounded-xl border border-[#dfe5dc] bg-white p-4">
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <p className="font-semibold text-neutral-900">{request.category}</p>
-                <p className="mt-1 text-sm text-neutral-600">{request.requesterNote}</p>
+          <div key={request._id} className="rounded-lg border border-border bg-card p-4">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-semibold text-foreground">{request.category}</p>
+                <p className="mt-1 text-xs text-muted-foreground">{request.requesterNote}</p>
               </div>
               {activeId !== request._id && (
                 <div className="flex shrink-0 gap-2">
-                  <button
+                  <Button
+                    size="sm"
                     onClick={() => openAction(request._id, "approve")}
-                    className="rounded-lg bg-[#1e5b3e] px-3 py-2 text-xs font-bold text-white hover:bg-[#174a32]"
                   >
                     Approve
-                  </button>
-                  <button
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="destructive"
                     onClick={() => openAction(request._id, "reject")}
-                    className="rounded-lg border border-[#e8d3d1] px-3 py-2 text-xs font-bold text-[#a4544f] hover:bg-[#fbf1f0]"
                   >
                     Reject
-                  </button>
+                  </Button>
                 </div>
               )}
             </div>
 
             {activeId === request._id && (
-              <div className="mt-3 space-y-2 border-t border-[#eef2ec] pt-3">
-                {error && <p className="text-xs font-medium text-[#a4544f]">{error}</p>}
+              <div className="mt-3 space-y-2 border-t border-muted pt-3">
+                {error && <p className="text-xs font-medium text-destructive">{error}</p>}
 
                 {mode === "approve" && (
                   <input
@@ -169,7 +171,7 @@ const PendingBudgetRequests = ({ onResolved }: { onResolved?: () => void }) => {
                     placeholder="Amount to allocate"
                     value={amount}
                     onChange={(e) => setAmount(e.target.value)}
-                    className="w-full rounded-lg border border-[#dfe5dc] bg-white px-3 py-2 text-sm outline-none focus:border-[#1e5b3e]"
+                    className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm outline-none focus:border-primary"
                   />
                 )}
 
@@ -178,25 +180,23 @@ const PendingBudgetRequests = ({ onResolved }: { onResolved?: () => void }) => {
                   onChange={(e) => setAdminNote(e.target.value)}
                   placeholder={mode === "approve" ? "Note for this decision" : "Reason for rejecting"}
                   rows={2}
-                  className="w-full rounded-lg border border-[#dfe5dc] bg-white px-3 py-2 text-sm outline-none focus:border-[#1e5b3e]"
+                  className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm outline-none focus:border-primary"
                 />
 
                 <div className="flex justify-end gap-2">
-                  <button
+                  <Button
+                    variant="outline"
                     onClick={closeAction}
-                    className="rounded-lg px-3 py-2 text-xs font-bold text-neutral-500 hover:bg-neutral-100"
                   >
                     Cancel
-                  </button>
-                  <button
+                  </Button>
+                  <Button
+                    variant={mode === "approve" ? "default" : "destructive"}
                     disabled={submitting}
                     onClick={() => (mode === "approve" ? handleApprove(request) : handleReject(request))}
-                    className={`rounded-lg px-3 py-2 text-xs font-bold text-white disabled:opacity-60 ${
-                      mode === "approve" ? "bg-[#1e5b3e] hover:bg-[#174a32]" : "bg-[#a4544f] hover:bg-[#8a453f]"
-                    }`}
                   >
                     {submitting ? "Saving…" : mode === "approve" ? "Confirm Approval" : "Confirm Rejection"}
-                  </button>
+                  </Button>
                 </div>
               </div>
             )}

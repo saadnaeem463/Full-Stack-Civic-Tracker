@@ -41,14 +41,14 @@ const LocationSearch = ({onSelect,setTitle,setNeighbourhoods} : {onSelect : (loc
          value={query}
          onChange={(e)=>setQuery(e.target.value)}
          placeholder='Search a street or area in Karachi'
-         className="flex h-10 w-full rounded-xl border border-zinc-200 
-         bg-white px-3 py-2 text-sm text-zinc-900 
-         focus:outline-none focus:ring-2 focus:ring-teal-600/20" />
+         className="flex h-10 w-full rounded-xl border border-border
+         bg-card px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground
+         focus:outline-none focus:ring-2 focus:ring-ring" />
 
-         {loading &&  <span className="absolute right-3 top-2.5 text-xs text-zinc-400">…</span>}
+         {loading &&  <span className="absolute right-3 top-2.5 text-xs text-muted-foreground">…</span>}
 
          {open && result?.length>0 && (
-            <ul className="absolute z-10 mt-1 max-h-56 w-full overflow-y-auto rounded-xl border border-zinc-200 bg-white shadow-lg">
+            <ul className="absolute z-10 mt-1 max-h-56 w-full overflow-y-auto rounded-xl border border-border bg-popover shadow-lg">
                 {result.map((r,i)=>(
                     <li key={i}
                     onClick={()=>{
@@ -59,7 +59,7 @@ const LocationSearch = ({onSelect,setTitle,setNeighbourhoods} : {onSelect : (loc
                         setNeighbourhoods(r.neighborhood)
                         
                     }}
-                    className="cursor-pointer px-3 py-2 text-sm hover:bg-zinc-50"
+                    className="cursor-pointer px-3 py-2 text-sm text-foreground hover:bg-muted"
                     >
                         {r.label}
                     </li>

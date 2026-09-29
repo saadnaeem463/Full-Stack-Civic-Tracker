@@ -1,4 +1,3 @@
-export const runtime = "nodejs";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { verifyToken } from "@/lib/jwt";
@@ -17,7 +16,7 @@ function isAdminOnly(pathname: string, method: string): boolean {
     return false;
 }
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
     const { pathname } = request.nextUrl;
     const isApiRoute = pathname.startsWith("/api/admin");
     const token = request.cookies.get("token")?.value;
@@ -31,6 +30,11 @@ export function middleware(request: NextRequest) {
         const decoded = verifyToken(token);
         const isStaff = decoded.role === "admin" || decoded.role === "moderator";
 
+        // the profile page belongs to every signed in role
+        if (pathname.startsWith("/profile")) {
+            return NextResponse.next();
+        }
+
         if (!isStaff) {
             if (isApiRoute) return NextResponse.json({ error: "Not authorized" }, { status: 403 });
             return NextResponse.redirect(new URL("/", request.url));
@@ -40,6 +44,7 @@ export function middleware(request: NextRequest) {
             if (isApiRoute) return NextResponse.json({ error: "Admin access required" }, { status: 403 });
             return NextResponse.redirect(new URL("/admin/dashboard", request.url));
         }
+
         return NextResponse.next();
     } catch (err) {
         console.log("Token verification failed:", err);
@@ -49,5 +54,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-    matcher: ["/dashboard/:path*", "/admin/:path*", "/api/admin/:path*"],
+    matcher: ["/admin/:path*", "/api/admin/:path*", "/profile/:path*"],
 };

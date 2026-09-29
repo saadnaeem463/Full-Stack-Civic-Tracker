@@ -1,6 +1,25 @@
-import React, { useState, useEffect } from "react";
-import { BellIcon, ChevronDownIcon, SearchIcon, XIcon } from "lucide-react";
+"use client";
+
+import React, { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
+import { SearchIcon, WalletIcon } from "lucide-react";
 import { pusherClient, BUDGET_CHANNEL, NEW_BUDGET_REQUEST_EVENT, BUDGET_REQUEST_RESOLVED_EVENT } from "@/lib/pusher-client";
+import { NotificationBell } from "@/components/web/notification-bell";
+import { ThemeToggle } from "@/components/web/theme-toggle";
+import { ProfileMenu } from "@/components/web/profile-menu";
+import { SidebarTrigger } from "@/components/ui/sidebar";
+import { getMe, userLogout } from "@/lib/services/auth.services";
+import { AnimatePresence, PopPanel, motion } from "@/components/motion";
+import { EmptyState, PageHeading, SectionCard } from "./primitives";
+
+export { EmptyState, PageHeading, SectionCard };
+
+/** Header search box value, shared with whatever admin page is mounted. */
+const AdminSearchContext = React.createContext<string>("");
+
+export function useAdminSearch() {
+  return React.useContext(AdminSearchContext);
+}
 
 type AdminShellProps = {
   search: string;
@@ -17,16 +36,47 @@ type NotificationItem = {
 
 export function AdminShell({ search, onSearch, children }: AdminShellProps) {
   const [notifOpen, setNotifOpen] = useState(false);
-  const [profileOpen, setProfileOpen] = useState(false);
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
+  const [user, setUser] = useState<{ name: string; email: string; role: string; avatar?: string } | null>(null);
+  const router = useRouter();
+  const budgetRef = useRef<HTMLDivElement>(null);
   const urgentCount = notifications.filter((item) => item.urgent).length;
+  const roleLabel = user?.role === "moderator" ? "Moderator" : "Admin";
+
+  async function handleLogout() {
+    await userLogout();
+    setUser(null);
+    router.push("/auth/login");
+  }
+
+  useEffect(() => {
+    if (!notifOpen) return;
+    const onDown = (event: PointerEvent) => {
+      if (!budgetRef.current?.contains(event.target as Node)) setNotifOpen(false);
+    };
+    const onKey = (event: KeyboardEvent) => event.key === "Escape" && setNotifOpen(false);
+    document.addEventListener("pointerdown", onDown);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("pointerdown", onDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [notifOpen]);
+
+  useEffect(() => {
+    getMe()
+      .then((res) => {
+        if (res.user) setUser(res.user);
+      })
+      .catch((err) => console.log("Failed to load current user:", err));
+  }, []);
 
   useEffect(() => {
     fetch("/api/admin/budget/requests?status=Pending")
       .then((res) => res.json())
       .then((data) => {
         setNotifications(
-          (data.requests ?? []).map((r: any) => ({
+          (data.requests ?? []).map((r: { _id: string; category: string }) => ({
             id: r._id,
             title: "Budget request pending",
             detail: `Category Budget Request for ${r.category}`,
@@ -67,112 +117,74 @@ export function AdminShell({ search, onSearch, children }: AdminShellProps) {
   }, []);
 
   return (
-    <div className="flex min-h-screen w-full flex-col bg-[#f7f8f4] text-[#17211b]">
-      <header className="sticky top-0 z-30 border-b border-[#dfe5dc] bg-[#fbfcf9]/95 backdrop-blur">
-        <div className="flex h-16 items-center gap-3 px-4 sm:px-6">
-          <label className="flex min-w-0 flex-1 items-center gap-2.5 rounded-lg border border-[#dfe5dc] bg-white px-3 py-2 sm:max-w-md">
-            <SearchIcon size={17} className="shrink-0 text-[#6f7c73]" aria-hidden="true" />
+    <div className="flex min-h-screen w-full flex-col bg-background text-foreground">
+      <header className="sticky top-0 z-30 border-b border-border bg-background/95 backdrop-blur">
+        <div className="flex min-h-16 flex-wrap items-center gap-3 px-4 py-2 sm:flex-nowrap sm:px-6 sm:py-0">
+          <SidebarTrigger aria-label="Toggle sidebar" className="-ml-2 shrink-0" />
+          <label className="order-last flex w-full min-w-0 flex-1 items-center gap-2.5 rounded-lg border border-border bg-card px-3 py-2 focus-within:ring-2 focus-within:ring-ring/60 sm:order-none sm:max-w-md">
+            <SearchIcon size={17} className="shrink-0 text-muted-foreground" aria-hidden="true" />
             <input
               value={search}
               onChange={(event) => onSearch(event.target.value)}
               placeholder="Search reports, workers, or locations"
               aria-label="Search the portal"
-              className="min-w-0 flex-1 border-0 p-0 text-sm outline-none placeholder:text-[#8a948c]"
+              className="min-w-0 flex-1 border-0 bg-transparent p-0 text-sm outline-none placeholder:text-muted-foreground"
             />
           </label>
-          <div className="ml-auto flex items-center gap-2">
-            <span className="hidden rounded-full bg-[#e8f1e7] px-2.5 py-1 text-[11px] font-bold uppercase tracking-[.12em] text-[#1e5b3e] sm:inline">Admin</span>
-            <div className="relative">
-              <button
-                onClick={() => { setNotifOpen(!notifOpen); setProfileOpen(false); }}
-                aria-expanded={notifOpen}
-                aria-label={`Notifications, ${urgentCount} urgent`}
-                className="relative grid h-9 w-9 place-items-center rounded-lg text-[#3f4d44] hover:bg-[#eef3ed]"
+          <div className="ml-auto flex items-center gap-1.5 sm:gap-2">
+            {user && (
+              <span
+                className={`hidden rounded-full px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[.14em] sm:inline ${
+                  user.role === "moderator" ? "bg-info/10 text-info" : "bg-primary/10 text-primary"
+                }`}
               >
-                <BellIcon size={19} />
-                {urgentCount > 0 && <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-red-500" />}
-              </button>
+                {roleLabel}
+              </span>
+            )}
+            <ThemeToggle />
+            <NotificationBell />
+            {urgentCount > 0 && (
+            <div className="relative" ref={budgetRef}>
+              <motion.button
+                type="button"
+                whileTap={{ scale: 0.92 }}
+                onClick={() => setNotifOpen(!notifOpen)}
+                aria-expanded={notifOpen}
+                title="Pending budget requests"
+                aria-label={`Pending budget requests, ${urgentCount} awaiting a decision`}
+                className="relative grid h-9 w-9 place-items-center rounded-lg text-muted-foreground hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60"
+              >
+                <WalletIcon size={19} />
+                <span className="absolute right-1 top-1 grid min-w-4 place-items-center rounded-full bg-destructive px-1 text-[10px] font-semibold leading-4 text-primary-foreground">
+                  {urgentCount > 9 ? "9+" : urgentCount}
+                </span>
+              </motion.button>
+              <AnimatePresence>
               {notifOpen && (
-                <div className="absolute right-0 top-11 z-40 w-[300px] rounded-xl border border-[#dfe5dc] bg-white p-2 shadow-lg">
-                  <p className="px-2 py-1.5 text-[11px] font-bold uppercase tracking-[.12em] text-[#6d7a71]">Notification center</p>
-                  {notifications.length === 0 && (
-                    <p className="px-2 py-3 text-xs text-[#6d7a71]">No notifications right now.</p>
-                  )}
+                <PopPanel className="absolute right-0 top-11 z-40 w-[min(20rem,calc(100vw-2rem))] rounded-xl border border-border bg-popover p-2 shadow-lg">
+                  <p className="px-2 py-1.5 text-[11px] font-semibold uppercase tracking-[.12em] text-muted-foreground">Budget requests</p>
+                  <p className="px-2 pb-1.5 text-xs text-muted-foreground">Pending category allocations waiting on your decision.</p>
                   {notifications.map((item) => (
-                    <div key={item.id} className="rounded-lg px-2 py-2 hover:bg-[#f4f7f3]">
+                    <div key={item.id} className="rounded-lg px-2 py-2 hover:bg-accent">
                       <p className="flex items-center gap-2 text-sm font-semibold">
-                        {item.urgent && <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-red-500" />}
+                        <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-destructive" />
                         {item.title}
                       </p>
-                      <p className="mt-0.5 text-xs text-[#6d7a71]">{item.detail}</p>
+                      <p className="mt-0.5 text-xs text-muted-foreground">{item.detail}</p>
                     </div>
                   ))}
-                </div>
+                </PopPanel>
               )}
+              </AnimatePresence>
             </div>
-            <div className="relative">
-              <button
-                onClick={() => { setProfileOpen(!profileOpen); setNotifOpen(false); }}
-                aria-expanded={profileOpen}
-                className="flex items-center gap-2 rounded-lg py-1 pl-1 pr-2 hover:bg-[#eef3ed]"
-              >
-                <span className="grid h-8 w-8 place-items-center rounded-full bg-[#1e5b3e] text-xs font-bold text-white">KO</span>
-                <ChevronDownIcon size={15} className="text-[#5b6960]" />
-              </button>
-              {profileOpen && (
-                <div className="absolute right-0 top-11 z-40 w-56 rounded-xl border border-[#dfe5dc] bg-white p-1.5 shadow-lg">
-                  <div className="border-b border-[#eef2ec] px-2.5 py-2">
-                    <p className="text-sm font-bold">Kwame Osei</p>
-                    <p className="text-xs text-[#6d7a71]">Public Works · Admin</p>
-                  </div>
-                  <button className="mt-1 w-full rounded-lg px-2.5 py-2 text-left text-sm font-medium hover:bg-[#f4f7f3]">Portal settings</button>
-                  <button className="w-full rounded-lg px-2.5 py-2 text-left text-sm font-medium hover:bg-[#f4f7f3]">Switch role view</button>
-                  <button className="w-full rounded-lg px-2.5 py-2 text-left text-sm font-medium text-[#a4544f] hover:bg-[#fbf1f0]">Sign out</button>
-                </div>
-              )}
-            </div>
+            )}
+            <ProfileMenu user={user} onLogout={handleLogout} />
           </div>
         </div>
       </header>
-      <main className="flex-1 px-4 py-7 sm:px-6 sm:py-9">{children}</main>
-    </div>
-  );
-}
-
-export function PageHeading({ eyebrow, title, description, action }: { eyebrow: string; title: string; description: string; action?: React.ReactNode }) {
-  return (
-    <div className="mb-7 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
-      <div>
-        <p className="text-[11px] font-bold uppercase tracking-[.15em] text-[#5c8069]">{eyebrow}</p>
-        <h1 className="font-display mt-1.5 text-[34px] leading-none tracking-[-.04em] sm:text-[40px]">{title}</h1>
-        <p className="mt-2.5 max-w-xl text-sm leading-6 text-[#637068]">{description}</p>
+      <div className="flex-1 px-4 py-7 sm:px-6 sm:py-9">
+        <AdminSearchContext.Provider value={search}>{children}</AdminSearchContext.Provider>
       </div>
-      {action}
-    </div>
-  );
-}
-
-export function SectionCard({ title, description, children, action }: { title: string; description?: string; children: React.ReactNode; action?: React.ReactNode }) {
-  return (
-    <section className="rounded-2xl border border-[#dfe5dc] bg-[#fbfcf9] p-5">
-      <div className="mb-5 flex items-start justify-between gap-4">
-        <div>
-          <h2 className="text-base font-bold tracking-[-.02em]">{title}</h2>
-          {description && <p className="mt-1 text-xs text-[#6d7a71]">{description}</p>}
-        </div>
-        {action}
-      </div>
-      {children}
-    </section>
-  );
-}
-
-export function EmptyState({ title, description, icon }: { title: string; description: string; icon?: React.ReactNode }) {
-  return (
-    <div className="rounded-xl border border-dashed border-[#cbd6c9] bg-white px-6 py-12 text-center">
-      <span className="mx-auto grid h-11 w-11 place-items-center rounded-full bg-[#e8f1e7] text-[#1e5b3e]">{icon ?? <XIcon size={20} />}</span>
-      <h3 className="mt-4 text-sm font-bold">{title}</h3>
-      <p className="mx-auto mt-1.5 max-w-sm text-xs leading-5 text-[#6d7a71]">{description}</p>
     </div>
   );
 }

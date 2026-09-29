@@ -36,8 +36,8 @@ export async function GET(req:NextRequest){
                 }
             }
         ])
-        const total = reports.reportsGen.reduce((sum, r) => sum + r.count, 0)
-        const suspicious = reports.reportsGen.reduce((sum, r) => sum + r.flagged, 0)
+        const total = reports.reportsGen.reduce((sum: number, r: { count: number }) => sum + r.count, 0)
+        const suspicious = reports.reportsGen.reduce((sum: number, r: { flagged: number }) => sum + r.flagged, 0)
         return NextResponse.json({reports,total,suspicious,workers,totalSpend,recentReports})
     } catch (error) {
         return NextResponse.json({error :"Failed to fetch dashboard data"},{status : 409})

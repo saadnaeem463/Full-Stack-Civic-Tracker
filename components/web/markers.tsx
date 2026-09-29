@@ -18,20 +18,8 @@ import {
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import type L from "leaflet"
-
-interface Report {
-  _id: string
-  lat: number
-  lng: number
-  title: string
-  details?: string
-  location: string
-  createdAt: string
-  media?: { url: string; type: string; poster?: string }[]
-  status: "open" | "in-progress" | "resolved"
-  upVoteCount: number
-  commentCount: number
-}
+import { toast } from "sonner"
+import type { MapReport } from "@/types/report"
 
 interface Comment {
   _id: string
@@ -53,16 +41,17 @@ function formatDate(dateStr: string) {
   })
 }
 
-const statusStyles = {
-  "open": "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
-  "in-progress": "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
-  "resolved": "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
+const statusStyles: Record<string, string> = {
+  "Reported": "bg-destructive/10 text-destructive",
+  "Acknowledged": "bg-info/10 text-info",
+  "In progress": "bg-warning/15 text-warning",
+  "Resolved": "bg-success/10 text-success",
 }
 
 
-export function ReportMarker({ report }: { report: Report }) {
+export function ReportMarker({ report }: { report: MapReport }) {
   const [comments, setComments] = useState<Comment[]>([])
-  const [errors, setErrors] = useState("")
+  const setErrors = (message: string) => toast.error(message)
   const [draft, setDraft] = useState("")
   const [submitting, setSubmitting] = useState(false)
   const [showInput, setShowInput] = useState(false)
@@ -87,7 +76,7 @@ export function ReportMarker({ report }: { report: Report }) {
         const data=await res.json()
         setHasVoted(data.hasUpvoted)
     }catch(error){
-      setErrors("Erro while upvoting : ",error)
+      setErrors("Could not register your upvote, please try again")
     }
   }
 
@@ -127,11 +116,10 @@ export function ReportMarker({ report }: { report: Report }) {
             })
 
           const data=await res.json()
-          console.log(data.data)
           setComments(data.data ?? [])
 
           }catch(error){
-            setErrors(error)
+            setErrors("Something went wrong, please try again")
           }
       }
 
@@ -167,7 +155,7 @@ export function ReportMarker({ report }: { report: Report }) {
       setUpVoteCount(data.upVoteCount)
 
       }catch(error){
-        setErrors(error)
+        setErrors("Something went wrong, please try again")
       }
 
     }
@@ -226,17 +214,17 @@ export function ReportMarker({ report }: { report: Report }) {
         >
           <ExpandableCard
           title={report.title}
-          description={report.location}
+          description={report.location ?? ""}
           src={report.media?.[0]?.url ?? PLACEHOLDER_IMAGE}
           media={report.media}
           details={report.details}
-          date={formatDate(report.createdAt)}
+          date={report.createdAt ? formatDate(report.createdAt) : ""}
           >
             {/* Status & Actions Bar */}
             <div className="flex w-full items-center justify-between">
               <div className="flex items-center gap-2">
-                <Badge className={cn("rounded-full px-2.5 py-0.5 text-xs font-semibold", statusStyles[report.status])}>
-                  {report.status}
+                <Badge className={cn("rounded-full px-2.5 py-0.5 text-xs font-semibold", statusStyles[report.status ?? "Reported"])}>
+                  {report.status ?? "Reported"}
                 </Badge>
               </div>
               <div className="flex items-center gap-1">
@@ -246,31 +234,31 @@ export function ReportMarker({ report }: { report: Report }) {
                 className={cn(
                   "flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium transition-colors",
                   hasVoted
-                    ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400"
-                    : "text-zinc-600 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800"
+                    ? "bg-primary/10 text-primary  "
+                    : "text-muted-foreground hover:bg-muted  "
                 )}
               >
-                <ArrowBigUp className={cn("h-4 w-4", hasVoted && "fill-emerald-600 dark:fill-emerald-400")} />
+                <ArrowBigUp className={cn("h-4 w-4", hasVoted && "fill-primary ")} />
                 {upVoteCount}
               </button>
-                <button className="flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium text-zinc-600 transition-colors hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800">
+                <button className="flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted">
                   <Share2 className="h-3.5 w-3.5" />
                 </button>
               </div>
             </div>
 
             {/* Divider */}
-            <div className="w-full border-t border-zinc-200 dark:border-zinc-800" />
+            <div className="w-full border-t border-border" />
 
             {/* Comments Header */}
             <div className="flex w-full items-center justify-between">
               <div className="flex items-center gap-2">
-                <MessageCircle className="h-4 w-4 text-zinc-500 dark:text-zinc-400" />
-                <span className="text-sm font-semibold text-zinc-900 dark:text-white">
+                <MessageCircle className="h-4 w-4 text-muted-foreground" />
+                <span className="text-sm font-semibold text-foreground dark:text-white">
                   {comments.length || 0} Comments
                 </span>
               </div>
-              <button className="flex items-center gap-1 text-xs font-medium text-zinc-500 transition-colors hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200">
+              <button className="flex items-center gap-1 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground">
                 Sort by
                 <MoreHorizontal className="h-3.5 w-3.5" />
               </button>
@@ -280,10 +268,10 @@ export function ReportMarker({ report }: { report: Report }) {
             {!showInput ? (
               <button
                 onClick={() => setShowInput(true)}
-                className="flex w-full items-center gap-3 rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2.5 text-sm text-zinc-500 transition-colors hover:bg-zinc-100 hover:text-zinc-700 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-200"
+                className="flex w-full items-center gap-3 rounded-lg border border-border bg-muted px-3 py-2.5 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
               >
                 <Avatar className="h-6 w-6 shrink-0">
-                  <AvatarFallback className="bg-emerald-100 text-[10px] font-semibold text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
+                  <AvatarFallback className="bg-primary/10 text-[10px] font-semibold text-primary">
                     Y
                   </AvatarFallback>
                 </Avatar>
@@ -292,7 +280,7 @@ export function ReportMarker({ report }: { report: Report }) {
             ) : (
               <div className="flex w-full items-start gap-3">
                 <Avatar className="h-8 w-8 shrink-0">
-                  <AvatarFallback className="bg-emerald-100 text-xs font-semibold text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
+                  <AvatarFallback className="bg-primary/10 text-xs font-semibold text-primary">
                     Y
                   </AvatarFallback>
                 </Avatar>
@@ -303,7 +291,7 @@ export function ReportMarker({ report }: { report: Report }) {
                     onChange={(e) => setDraft(e.target.value)}
                     onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleAddComment()}
                     placeholder="Add a comment..."
-                    className="h-9 border-0 border-b border-zinc-200 bg-transparent px-0 text-sm shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 dark:border-zinc-800"
+                    className="h-9 border-0 border-b border-border bg-transparent px-0 text-sm shadow-none focus-visible:ring-0 focus-visible:ring-offset-0"
                   />
                   {draft.trim() && (
                     <div className="flex items-center gap-2">
@@ -311,7 +299,7 @@ export function ReportMarker({ report }: { report: Report }) {
                         size="sm"
                         variant="ghost"
                         onClick={() => { setDraft(""); setShowInput(false) }}
-                        className="h-7 rounded-full px-3 text-xs text-zinc-500 hover:text-zinc-700 dark:text-zinc-400"
+                        className="h-7 rounded-full px-3 text-xs text-muted-foreground hover:text-foreground"
                       >
                         Cancel
                       </Button>
@@ -319,7 +307,7 @@ export function ReportMarker({ report }: { report: Report }) {
                         size="sm"
                         onClick={handleAddComment}
                         disabled={submitting}
-                        className="h-7 rounded-full bg-emerald-600 px-3 text-xs text-white hover:bg-emerald-700 disabled:opacity-50"
+                        className="h-7 rounded-full bg-primary px-3 text-xs text-white hover:bg-primary/90 disabled:opacity-50"
                       >
                         {submitting ? "Posting..." : "Comment"}
                       </Button>
@@ -330,24 +318,24 @@ export function ReportMarker({ report }: { report: Report }) {
             )}
 
             {/* Comments List */}
-            <div className="flex w-full flex-col gap-0 divide-y divide-zinc-100 dark:divide-zinc-800">
+            <div className="flex w-full flex-col gap-0 divide-y divide-border">
               {comments.length > 0 && comments.map((comment) => (
                 <div key={comment._id} className="group flex gap-3 py-3">
                   <Avatar className="h-7 w-7 shrink-0">
-                    <AvatarFallback className="bg-zinc-200 text-[10px] font-semibold text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
-                      {comment.author.charAt(0)}
+                    <AvatarFallback className="bg-muted text-[10px] font-semibold text-muted-foreground">
+                      {comment.author?.charAt(0) ?? "?"}
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex flex-1 flex-col gap-0.5">
                     <div className="flex items-center gap-2">
-                      <span className="text-xs font-semibold text-zinc-900 dark:text-white">
+                      <span className="text-xs font-semibold text-foreground dark:text-white">
                         {comment.author}
                       </span>
-                      <span className="text-[10px] text-zinc-400 dark:text-zinc-500">
+                      <span className="text-[10px] text-muted-foreground">
                         {comment.time}
                       </span>
                     </div>
-                    <p className="text-[13px] leading-relaxed text-zinc-600 dark:text-zinc-300">
+                    <p className="text-[13px] leading-relaxed text-muted-foreground">
                       {comment.text}
                     </p>
                   </div>

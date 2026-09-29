@@ -84,7 +84,7 @@ export function ExpandableCard({
                   ref={cardRef}
                   style={{ maxHeight: "calc(100vh - 92px)" }}
                   className={cn(
-                    "relative flex min-h-0 w-full max-w-[850px] flex-col overflow-y-auto bg-white shadow-2xl sm:rounded-2xl dark:bg-zinc-950 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
+                    "relative flex min-h-0 w-full max-w-[850px] flex-col overflow-y-auto bg-card shadow-2xl sm:rounded-2xl  [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
                     classNameExpanded
                   )}
                   {...props}
@@ -137,19 +137,19 @@ export function ExpandableCard({
                   </div>
 
                   {/* Content Section */}
-                  <div className="flex flex-1 min-h-0 flex-col bg-white dark:bg-zinc-950">
+                  <div className="flex flex-1 min-h-0 flex-col bg-card">
                     <div className="flex-1 overflow-y-auto px-6 py-5 sm:px-8">
                       {/* Title, Description & Date */}
-                      <div className="mb-5 flex flex-col gap-2 border-b border-zinc-100 pb-5 dark:border-zinc-800">
-                        <div className="flex items-center gap-2 text-xs text-zinc-400 dark:text-zinc-500">
+                      <div className="mb-5 flex flex-col gap-2 border-b border-border pb-5">
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
                           <Calendar className="h-3.5 w-3.5" />
                           {date}
                         </div>
-                        <h2 className="text-xl font-bold text-zinc-900 dark:text-white sm:text-2xl">
+                        <h2 className="text-xl font-bold text-foreground dark:text-white sm:text-2xl">
                           {title}
                         </h2>
                         {details && (
-                          <p className="text-sm leading-relaxed text-zinc-600 dark:text-zinc-400">
+                          <p className="text-sm leading-relaxed text-muted-foreground">
                             {details}
                           </p>
                         )}
@@ -182,7 +182,7 @@ export function ExpandableCard({
         layoutId={`card-${title}-${id}`}
         onClick={() => setActive(true)}
         className={cn(
-          "group relative flex w-full cursor-pointer flex-col overflow-hidden rounded-xl border border-zinc-200/80 bg-white shadow-md transition-shadow duration-300 hover:shadow-xl dark:border-zinc-800 dark:bg-zinc-950",
+          "group relative flex w-full cursor-pointer flex-col overflow-hidden rounded-xl border border-border bg-card shadow-md transition-shadow duration-300 hover:shadow-xl  ",
           className
         )}
       >
@@ -213,7 +213,7 @@ export function ExpandableCard({
           <motion.button
             aria-label="Open card"
             layoutId={`button-${title}-${id}`}
-            className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 text-zinc-700 shadow-sm backdrop-blur-sm transition-all duration-300 hover:bg-white hover:text-black hover:shadow-md"
+            className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full bg-card/90 text-foreground shadow-sm backdrop-blur-sm transition-all duration-300 hover:bg-card hover:shadow-md"
           >
             <Plus className="h-4 w-4" />
           </motion.button>
@@ -221,24 +221,24 @@ export function ExpandableCard({
         <div className="flex flex-col gap-1.5 p-4">
           <motion.p
             layoutId={`description-${description}-${id}`}
-            className="flex items-center gap-1.5 text-xs font-medium uppercase tracking-wider text-emerald-600 dark:text-emerald-400"
+            className="flex items-center gap-1.5 text-xs font-medium uppercase tracking-wider text-primary"
           >
             <MapPin className="h-3 w-3" />
             {description}
           </motion.p>
           <motion.h3
             layoutId={`title-${title}-${id}`}
-            className="text-base font-semibold leading-snug text-zinc-900 dark:text-white"
+            className="text-base font-semibold leading-snug text-foreground dark:text-white"
           >
             {title}
           </motion.h3>
         </div>
-        <div className="flex items-center border-t border-zinc-100 px-4 py-2.5 dark:border-zinc-800">
-          <span className="flex items-center gap-1 text-xs text-zinc-500 dark:text-zinc-400">
+        <div className="flex items-center border-t border-border px-4 py-2.5">
+          <span className="flex items-center gap-1 text-xs text-muted-foreground">
             <MessageSquare className="h-3 w-3" />
             View details
           </span>
-          <ChevronRight className="ml-auto h-3.5 w-3.5 text-zinc-400 transition-transform duration-300 group-hover:translate-x-0.5 dark:text-zinc-500" />
+          <ChevronRight className="ml-auto h-3.5 w-3.5 text-muted-foreground transition-transform duration-300 group-hover:translate-x-0.5" />
         </div>
       </motion.div>
     </>

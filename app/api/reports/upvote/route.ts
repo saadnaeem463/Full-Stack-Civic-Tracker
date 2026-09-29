@@ -5,6 +5,8 @@ import { pusherServer } from "@/lib/pusher";
 import { cookies } from "next/headers";
 import { NextRequest,NextResponse } from "next/server";
 import { verifyToken } from "@/lib/jwt";
+import { User } from "@/models/user";
+import { notify } from "@/lib/notifications";
 
 export async function PUT(req:NextRequest){
     try{
@@ -30,9 +32,9 @@ export async function PUT(req:NextRequest){
             return NextResponse.json({error : "report doesn't exist"},{status : 400})
         }
 
-        const alreadyUpVoted=findReport.upVotedBy.some((voterId)=>voterId.toString()===decoded.userId)
+        const alreadyUpVoted=findReport.upVotedBy.some((voterId: { toString(): string })=>voterId.toString()===decoded.userId)
         if(alreadyUpVoted){
-            findReport.upVotedBy = findReport.upVotedBy.filter((voterId)=>voterId.toString()!==decoded.userId)
+            findReport.upVotedBy = findReport.upVotedBy.filter((voterId: { toString(): string })=>voterId.toString()!==decoded.userId)
         }else{
             findReport.upVotedBy.push(decoded.userId)
         }
@@ -45,6 +47,17 @@ export async function PUT(req:NextRequest){
             reportId: findReport._id,
             upVoteCount
         })
+
+        if(!alreadyUpVoted && findReport.userId.toString()!==decoded.userId){
+            const actor=await User.findById(decoded.userId)
+            await notify({
+                recipient : findReport.userId,
+                type : "upvote",
+                report : findReport._id,
+                triggeredBy : decoded.userId,
+                message : `${actor?.name ?? "Someone"} upvoted your report "${findReport.title}"`
+            })
+        }
 
         return NextResponse.json({ upVoteCount, hasUpvoted: !alreadyUpVoted},{status : 202})
     }catch(err){
@@ -75,7 +88,7 @@ export async function GET(req:NextRequest){
     const findReport=await Report.findById(id)
     if (!findReport) return NextResponse.json({ error: "report doesn't exist" }, { status: 404 })
 
-    const hasUpvoted=findReport.upVotedBy.some((voterId)=> voterId.toString()===decoded.userId.toString())
+    const hasUpvoted=findReport.upVotedBy.some((voterId: { toString(): string })=> voterId.toString()===decoded.userId.toString())
 
     return NextResponse.json({upVoteCount : findReport.upVotedBy.length,hasUpvoted})
     }catch(err){

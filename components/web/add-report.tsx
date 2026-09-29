@@ -1,5 +1,9 @@
-import { useId, useState } from "react";
+"use client";
+
+import { useState } from "react";
 import type React from "react";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import LocationSearch from "./location-search";
 
 import { Button } from "@/components/ui/button";
@@ -14,6 +18,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { PlusIcon, XIcon } from "lucide-react";
 import { Label } from "@/components/ui/label";
 
 type UploadedMedia = {
@@ -26,8 +31,9 @@ type UploadResponse = { url: string; contentType: string; error?: string };
 const MAX_FILES = 4;
 
 const AddReport = () => {
-  const id = useId();
+  const router = useRouter();
 
+  const [open, setOpen] = useState(false);
   const [media, setMedia] = useState<UploadedMedia[]>([]);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
@@ -41,6 +47,7 @@ const AddReport = () => {
   const [locationMode, setLocationMode] = useState<"gps" | "search">("gps");
   const [locationName,setLocationName]=useState('')
   const [neighborhood,setNeighbourhood]=useState("")
+  const [accessibility, setAccessibility] = useState(false);
 
   const handleCordinates = () => {
     if (!navigator.geolocation) {
@@ -135,14 +142,21 @@ const AddReport = () => {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+
+    if (!cordinates || !locationName) {
+      toast.error("Add a location first — use your current location or search for an address");
+      return;
+    }
+
     setSubmitting(true);
 
-    const formData = new FormData(e.currentTarget);
+    const form = e.currentTarget;
+    const formData = new FormData(form);
     const payload = {
       issueType: formData.get("issueType"),
       title: formData.get("attention"),
       details: formData.get("details"),
-      accessibilityFlag: formData.get("accessibility") === "on",
+      accessibilityFlag: accessibility,
       media: media.map(({ url, type }) => ({ url, type })),
       lat: cordinates?.lat,
       lng: cordinates?.lng,
@@ -160,43 +174,47 @@ const AddReport = () => {
       if (!res.ok) {
         throw new Error(result.error || "Failed to submit report");
       }
-      e.currentTarget.reset();
+
+      // Success: wipe every field, close the dialog and send the user back to the map
+      form.reset();
+      setAccessibility(false);
       setMedia([]);
-    } catch (error) {
-      console.log("Submit failed : ", error);
-    } finally {
-      setMedia([]);
-      setLocating(false);
-      setUploadError("");
       setCordinates(null);
-      setUploading(false);
-      setSubmitting(false);
+      setLocationName("");
+      setNeighbourhood("");
+      setLocationMode("gps");
       setLocationError("");
+      setUploadError("");
+      setLocating(false);
+      setOpen(false);
+      toast.success("Report submitted — we'll notify you when its status changes");
+      router.push("/");
+    } catch (error) {
+      // Keep the form as-is on failure so the user doesn't lose what they typed
+      console.log("Submit failed : ", error);
+      toast.error(error instanceof Error ? error.message : "Could not submit your report, please try again");
+    } finally {
+      setSubmitting(false);
     }
   };
 
   return (
-    <Dialog>
-      <DialogTrigger
-        render={
-          <Button
-            variant="outline"
-            className="rounded-xl border border-teal-200 bg-teal-50 px-6 py-2 font-medium text-teal-800 transition-all hover:bg-teal-100 dark:border-cyan-800 dark:bg-cyan-950 dark:text-cyan-100 dark:hover:bg-cyan-900"
-          />
-        }
-      >
+    <Dialog open={open} onOpenChange={(nextOpen) => setOpen(nextOpen)}>
+      <DialogTrigger render={<Button className="h-9 gap-1.5 px-3.5" />}>
+        <PlusIcon size={16} aria-hidden="true" />
         Report an issue
       </DialogTrigger>
-      <DialogContent className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-xl sm:max-w-lg dark:border-zinc-800 dark:bg-zinc-900">
-        <DialogHeader className="space-y-1.5 text-left">
-          <DialogDescription className="text-xs font-semibold tracking-wider text-zinc-400 uppercase dark:text-zinc-500">
+      <DialogContent className="rounded-2xl border border-border bg-card p-6 shadow-xl sm:max-w-lg">
+        <DialogHeader className="space-y-1.5 p-6 pb-0 text-left">
+          <DialogDescription className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">
             New Report
           </DialogDescription>
-          <DialogTitle className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">
+          <DialogTitle className="text-2xl font-bold text-foreground">
             Help improve your neighborhood
           </DialogTitle>
         </DialogHeader>
-        <form className="mt-2 flex flex-col gap-4" onSubmit={handleSubmit}>
+        <form className="flex min-h-0 flex-1 flex-col" onSubmit={handleSubmit}>
+          <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-6 py-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="grid gap-2">
               <Label htmlFor="issue-type">Issue type</Label>
@@ -204,7 +222,7 @@ const AddReport = () => {
                 id="issue-type"
                 name="issueType"
                 required
-                className="flex h-10 w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 ring-offset-white placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-teal-600/20 focus-visible:ring-teal-600 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:ring-offset-zinc-900 dark:placeholder:text-zinc-500 dark:focus-visible:ring-cyan-500"
+                className="flex h-10 w-full rounded-xl border border-border bg-card px-3 py-2 text-sm text-foreground ring-offset-white placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus-visible:ring-ring dark:ring-offset-zinc-900"
               >
                 <option value="">Choose a category</option>
                 <option value="Roads">Roads</option>
@@ -216,7 +234,7 @@ const AddReport = () => {
             <div className="grid gap-2">
               <div className="grid gap-2">
                 <Label>Location</Label>
-                <div className="flex gap-2 rounded-xl bg-zinc-100 p-1 dark:bg-zinc-800">
+                <div className="flex gap-2 rounded-xl bg-muted p-1">
                   <button
                     type="button"
                     onClick={() => {
@@ -225,8 +243,8 @@ const AddReport = () => {
                     }}
                     className={`flex-1 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
                       locationMode === "gps"
-                        ? "bg-white text-zinc-900 shadow-sm dark:bg-zinc-900 dark:text-zinc-100"
-                        : "text-zinc-500 dark:text-zinc-400"
+                        ? "bg-card text-foreground shadow-sm  "
+                        : "text-muted-foreground "
                     }`}
                   >
                     Use my location
@@ -239,8 +257,8 @@ const AddReport = () => {
                     }}
                     className={`flex-1 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
                       locationMode === "search"
-                        ? "bg-white text-zinc-900 shadow-sm dark:bg-zinc-900 dark:text-zinc-100"
-                        : "text-zinc-500 dark:text-zinc-400"
+                        ? "bg-card text-foreground shadow-sm  "
+                        : "text-muted-foreground "
                     }`}
                   >
                     Search address
@@ -253,7 +271,7 @@ const AddReport = () => {
                     variant="outline"
                     onClick={handleCordinates}
                     disabled={locating}
-                    className="w-full justify-start gap-2 rounded-xl border border-zinc-200 bg-white px-3 text-sm font-normal text-zinc-600 hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800"
+                    className="w-full justify-start gap-2 rounded-xl border border-border bg-card px-3 text-sm font-normal text-muted-foreground hover:bg-muted"
                   >
                     {locating
                       ? "Locating…"
@@ -265,19 +283,18 @@ const AddReport = () => {
                   <LocationSearch
                     setTitle={(title)=>{
                       setLocationName(title)
-                      console.log(locationName)
                     }}
                     onSelect={(loc) =>
                       setCordinates({ lat: loc.lat, lng: loc.lng })
                     }
-                    setNeighbourhoods={(neigh:any)=>{
+                    setNeighbourhoods={(neigh: string)=>{
                       setNeighbourhood(neigh)
                     }}
                   />
                 )}
 
                 {locationError && (
-                  <span className="text-xs text-red-500">{locationError}</span>
+                  <span role="alert" className="text-xs text-destructive">{locationError}</span>
                 )}
               </div>
             </div>
@@ -298,13 +315,13 @@ const AddReport = () => {
               name="details"
               rows={3}
               placeholder="Share details that can help the city find and fix it."
-              className="flex w-full resize-none rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 ring-offset-white placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-teal-600/20 focus-visible:ring-teal-600 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:ring-offset-zinc-900 dark:placeholder:text-zinc-500 dark:focus-visible:ring-cyan-500"
+              className="flex w-full resize-none rounded-xl border border-border bg-card px-3 py-2 text-sm text-foreground ring-offset-white placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus-visible:ring-ring dark:ring-offset-zinc-900"
             />
           </div>
           <div className="grid gap-2">
             <Label htmlFor="photo">Add a photo (optional)</Label>
-            <div className="flex items-center justify-between rounded-xl border border-dashed border-zinc-300 bg-zinc-50 px-4 py-3 dark:border-zinc-700 dark:bg-zinc-800/50">
-              <span className="text-sm text-zinc-500 dark:text-zinc-400">
+            <div className="flex items-center justify-between rounded-xl border border-dashed border-border bg-muted px-4 py-3">
+              <span className="text-sm text-muted-foreground">
                 {uploading
                   ? "Uploading.."
                   : media.length > 0
@@ -313,7 +330,7 @@ const AddReport = () => {
               </span>
               <label
                 htmlFor="photo"
-                className="cursor-pointer rounded-lg border border-zinc-300 bg-white px-3 py-1.5 text-xs font-medium text-zinc-700 hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
+                className="cursor-pointer rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-medium text-foreground hover:bg-muted"
               >
                 Choose file
               </label>
@@ -321,6 +338,7 @@ const AddReport = () => {
               <input
                 type="file"
                 id="photo"
+                className="sr-only"
                 accept="image/*,video/*"
                 multiple
                 onChange={handleFileChange}
@@ -329,7 +347,7 @@ const AddReport = () => {
             </div>
 
             {uploadError && (
-              <span className="text-xs text-red-500">{uploadError}</span>
+              <span role="alert" className="text-xs text-destructive">{uploadError}</span>
             )}
 
             {media.length > 0 && (
@@ -351,34 +369,38 @@ const AddReport = () => {
                     <button
                       type="button"
                       onClick={() => removeMedia(m.url)}
-                      className="absolute -top-1 -right-1 flex items-center justify-center rounded-full bg-black/70 text-white text-xs w-5 h-5"
+                      aria-label={`Remove ${m.name}`}
+                      className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-foreground/80 text-background"
                     >
-                      X
+                      <XIcon size={12} aria-hidden="true" />
                     </button>
                   </div>
                 ))}
               </div>
             )}
           </div>
-          <div className="flex items-start gap-3 rounded-xl border border-teal-100 bg-teal-50/50 p-3 dark:border-cyan-900/50 dark:bg-cyan-950/30">
+          <div className="flex items-start gap-3 rounded-xl border border-primary/20 bg-primary/5 p-3">
             <Checkbox
               id="accessibility"
-              className="mt-0.5 focus-visible:ring-teal-600/20 data-[state=checked]:border-teal-600 data-[state=checked]:bg-teal-600 dark:focus-visible:ring-cyan-500/40 dark:data-[state=checked]:border-cyan-500 dark:data-[state=checked]:bg-cyan-500"
+              checked={accessibility}
+              onCheckedChange={(checked) => setAccessibility(checked === true)}
+              className="mt-0.5 focus-visible:ring-ring data-[state=checked]:border-primary/20 data-[state=checked]:bg-primary"
             />
             <div className="flex flex-col gap-0.5">
               <Label
                 htmlFor="accessibility"
-                className="text-sm font-medium text-zinc-900 dark:text-zinc-100"
+                className="text-sm font-medium text-foreground"
               >
                 Accessibility assistance needed
               </Label>
-              <span className="text-xs text-zinc-500 dark:text-zinc-400">
+              <span className="text-xs text-muted-foreground">
                 Mark this if the issue creates an urgent access barrier.
               </span>
             </div>
           </div>
-          <DialogFooter className="m-0 mt-2 flex-col gap-3 border-none bg-transparent p-0 pt-4 sm:flex-col">
-            <div className="flex items-center gap-2 text-xs text-zinc-500 dark:text-zinc-400">
+          </div>
+          <DialogFooter className="m-0 flex-col gap-3 border-t border-border bg-card p-4 sm:flex-col">
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 width="14"
@@ -392,12 +414,12 @@ const AddReport = () => {
               >
                 <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
               </svg>
-              You will be asked to sign in to track updates.
+              You’ll be notified whenever the status of your report changes.
             </div>
             <Button
               type="submit"
               disabled={uploading || submitting}
-              className="w-full rounded-xl bg-teal-800 py-2.5 font-semibold text-white shadow-md transition-all hover:bg-teal-900 focus-visible:ring-teal-800 dark:bg-teal-700 dark:hover:bg-teal-800 dark:focus-visible:ring-teal-600"
+              className="w-full rounded-xl bg-primary py-2.5 font-semibold text-white shadow-md transition-all hover:bg-primary/90 focus-visible:ring-ring"
             >
               {submitting ? "Submitting…" : "Submit report"}
             </Button>

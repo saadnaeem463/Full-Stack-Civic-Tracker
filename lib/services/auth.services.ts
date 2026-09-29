@@ -18,7 +18,7 @@ export async function signupUser(data : z.infer<typeof SignupSchema>){
             return result
         } catch (error) {
             return Response.json(
-                {message  : "Something shit went wrong while signup",errors : error},
+                {message  : "Something went wrong while signing up",errors : error},
                 {status : 400}
             )
         }
@@ -41,7 +41,7 @@ export async function loginUser(data : z.infer<typeof LoginSchema>){
             return result
         } catch (error) {
             return Response.json(
-                {message  : "Something shit went wrong while logging in",errors : error},
+                {message  : "Something went wrong while logging in",errors : error},
                 {status : 400}
             )
         }
@@ -63,7 +63,7 @@ export async function getMe(){
         return result
     } catch (error) {
         return Response.json(
-            {message  : "Something shit went wrong while getting user",errors : error},
+            {message  : "Something went wrong while loading your account",errors : error},
             {status : 400}
         )
     }
@@ -85,7 +85,7 @@ export async function userLogout(){
         return result
     } catch (error) {
         return Response.json(
-            {message  : "Something shit went wrong while logging user out",errors : error},
+            {message  : "Something went wrong while logging out",errors : error},
             {status : 400}
         )
     }

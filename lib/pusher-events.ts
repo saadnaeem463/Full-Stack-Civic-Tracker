@@ -5,11 +5,16 @@
 // browser-oriented setup code on the server too — not what we want.
 export const REPORTS_CHANNEL = "reports-channel"
 export const NEW_REPORT_EVENT = "new-report"
-export const COMMENTS_CHANNEL="comment-added"
-export const NEW_COMMENTS_EVENT="new-comment"
-export const UPVOTE_CHANNEL='upvote-channel'
-export const NEW_UPVOTE_EVENT='upvote-added'
-export const REPORT_UPDATED_EVENT='report-updated'
-export const BUDGET_CHANNEL="budget-channel"
-export const NEW_BUDGET_REQUEST_EVENT="new-budget-request"
-export const BUDGET_REQUEST_RESOLVED_EVENT="budget-request-resolved"
+export const COMMENTS_CHANNEL = "comment-added"
+export const NEW_COMMENTS_EVENT = "new-comment"
+export const UPVOTE_CHANNEL = "upvote-channel"
+export const NEW_UPVOTE_EVENT = "upvote-added"
+export const REPORT_UPDATED_EVENT = "report-updated"
+export const REPORT_DELETED_EVENT = "report-deleted"
+export const BUDGET_CHANNEL = "budget-channel"
+export const NEW_BUDGET_REQUEST_EVENT = "new-budget-request"
+export const BUDGET_REQUEST_RESOLVED_EVENT = "budget-request-resolved"
+// Private per-user channels — the only private channels in the app, so they need
+// the auth endpoint (app/api/pusher/auth) instead of being open like the ones above.
+export const USER_CHANNEL_PREFIX = "private-user"
+export const NEW_NOTIFICATION_EVENT = "NEW_NOTIFICATION"

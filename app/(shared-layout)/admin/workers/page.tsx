@@ -1,16 +1,28 @@
 "use client";
 import { useState, useEffect } from "react";
-import { PlusIcon } from "lucide-react";
+import { toast } from "sonner";
+import { UsersIcon } from "lucide-react";
 import AddWorkers from "@/components/web/add-workers";
 import { adaptWorker } from "@/lib/report-adapter";
 import ViewTasks from "@/components/web/admin/view-tasks";
 import { User } from "@/types/user";
 import { getMe } from "@/lib/services/auth.services";
+import { Button } from "@/components/ui/button";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import {
+  EmptyState,
+  PageHeading,
+  PageLoading,
+  SectionCard,
+  pageContainer,
+} from "@/components/web/admin/primitives";
 const WrokersAdmin = () => {
   const [user, setUser] = useState<User | null>(null);
   const isAdmin = user?.role === "admin";
   const [workers, setWorkers] = useState<ReturnType<typeof adaptWorker>[]>([]);
+  const [loading, setLoading] = useState(true);
   const [errors, setErrors] = useState("");
+  const [removeTarget, setRemoveTarget] = useState<ReturnType<typeof adaptWorker> | null>(null);
   const [editingWorker, setEditingWorker] = useState<ReturnType<
     typeof adaptWorker
   > | null>(null);
@@ -20,10 +32,18 @@ const WrokersAdmin = () => {
     const fetchWorkers = async () => {
       try {
         const res = await fetch("/api/admin/workers");
+        if (res.status === 401) {
+          window.location.assign("/auth/login");
+          return;
+        }
+        if (!res.ok) throw new Error("Failed to fetch workers");
         const data = await res.json();
         setWorkers((data.workers ?? []).map(adaptWorker));
+        setErrors("");
       } catch (error) {
-        setErrors("Failed to fetch Workers");
+        setErrors(error instanceof Error ? error.message : "Failed to fetch Workers");
+      } finally {
+        setLoading(false);
       }
     };
     fetchWorkers();
@@ -36,14 +56,19 @@ const WrokersAdmin = () => {
   }, []);
 
   async function handleRemove(workerId: string) {
-    const res = await fetch(`/api/admin/workers?workerId=${workerId}`, {
-      method: "DELETE",
-    });
-    if (!res.ok) {
-      setErrors("Error while deleting the worker");
-      return;
+    try {
+      const res = await fetch(`/api/admin/workers?workerId=${workerId}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) throw new Error("Error while deleting the worker");
+      setWorkers((prev) => prev.filter((w) => w.id !== workerId));
+      setErrors("");
+      toast.success("Worker removed");
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Error while deleting the worker";
+      setErrors(message);
+      toast.error(message);
     }
-    setWorkers((prev) => prev.filter((w) => w.id !== workerId));
   }
 
   const handleWorkerAdded = (newWorker: any) => {
@@ -59,124 +84,126 @@ const WrokersAdmin = () => {
   const busy = workers.filter((w) => w.status === "Busy").length;
 
   return (
-    <div className="min-h-screen bg-[#f7f8f4] px-4 py-7 text-[#17211b] sm:px-6 sm:py-9">
-      {/* Page heading */}
-      <div className="mb-7 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
-        <div>
-          <p className="text-[11px] font-bold uppercase tracking-[.15em] text-[#5c8069]">
-            Field resources
-          </p>
-          <h1 className="font-display mt-1.5 text-[34px] leading-none tracking-[-.04em] sm:text-[40px]">
-            Workers
-          </h1>
-          <p className="mt-2.5 max-w-xl text-sm leading-6 text-[#637068]">
-            Who is available, what they are working on, and how quickly each
-            crew closes assignments.
-          </p>
-        </div>
-        {isAdmin && (
-          <AddWorkers handleWorkerAdded={handleWorkerAdded} isEdit={null} />
-        )}
-      </div>
+    <div className={pageContainer}>
+      <PageHeading
+        eyebrow="Field resources"
+        title="Workers"
+        description="Who is available, what they are working on, and how quickly each crew closes assignments."
+        action={
+          isAdmin ? (
+            <AddWorkers handleWorkerAdded={handleWorkerAdded} isEdit={null} />
+          ) : undefined
+        }
+      />
 
       {errors && (
-        <p className="mb-4 text-sm font-medium text-[#a4544f]">{errors}</p>
+        <p role="alert" className="mb-4 text-sm font-medium text-destructive">{errors}</p>
       )}
 
-      {/* Section card */}
-      <section className="rounded-2xl border border-[#dfe5dc] bg-[#fbfcf9] p-5">
-        <div className="mb-5">
-          <h2 className="text-base font-bold tracking-[-.02em]">
-            Crew availability
-          </h2>
-          <p className="mt-1 text-xs text-[#6d7a71]">
-            {busy} of {workers.length} workers are currently assigned to an
-            active report.
-          </p>
-        </div>
-
+      {loading ? (
+        <PageLoading label="Loading workers…" />
+      ) : (
+      <SectionCard
+        title="Crew availability"
+        description={`${busy} of ${workers.length} workers are currently assigned to an active report.`}
+      >
         {workers.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-[#cbd6c9] bg-white px-6 py-12 text-center">
-            <h3 className="text-sm font-bold">No workers registered</h3>
-            <p className="mx-auto mt-1.5 max-w-sm text-xs leading-5 text-[#6d7a71]">
-              Add your first crew member to start assigning reports.
-            </p>
-          </div>
+          <EmptyState
+            title="No workers registered"
+            description="Add your first crew member to start assigning reports."
+            icon={<UsersIcon size={20} />}
+          />
         ) : (
-          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
             {workers.map((w) => (
               <article
                 key={w.id}
-                className="rounded-xl border border-[#dfe5dc] bg-white p-4"
+                className="rounded-lg border border-border bg-background p-4"
               >
                 <div className="flex items-start gap-3">
-                  <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[#e8f1e7] text-xs font-bold text-[#1e5b3e]">
+                  <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
                     {w.initials}
                   </span>
                   <div className="min-w-0 flex-1">
-                    <h3 className="truncate text-sm font-bold">{w.name}</h3>
-                    <p className="text-xs text-[#6d7a71]">{w.specialty}</p>
+                    <h3 className="truncate text-sm font-semibold">{w.name}</h3>
+                    <p className="text-xs text-muted-foreground">{w.specialty}</p>
                   </div>
                   <span
-                    className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                    className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${
                       w.status === "Busy"
-                        ? "bg-amber-100 text-amber-700"
-                        : "bg-green-100 text-green-700"
+                        ? "bg-warning/10 text-warning"
+                        : "bg-success/10 text-success"
                     }`}
                   >
                     {w.status}
                   </span>
                 </div>
 
-                <dl className="mt-4 grid grid-cols-3 gap-2 text-center">
-                  <div className="rounded-lg bg-[#f4f7f3] px-2 py-2">
-                    <dt className="text-[10px] text-[#6d7a71]">Jobs</dt>
-                    <dd className="text-sm font-bold">{w.completedJobs}</dd>
+                <dl className="mt-4 grid grid-cols-2 gap-2 text-center">
+                  <div className="rounded-lg bg-muted px-2 py-2">
+                    <dt className="text-[10px] text-muted-foreground">Jobs</dt>
+                    <dd className="text-sm font-semibold">{w.completedJobs}</dd>
                   </div>
-                  <div className="rounded-lg bg-[#f4f7f3] px-2 py-2">
-                    <dt className="text-[10px] text-[#6d7a71]">Avg hrs</dt>
-                    <dd className="text-sm font-bold">
+                  <div className="rounded-lg bg-muted px-2 py-2">
+                    <dt className="text-[10px] text-muted-foreground">Avg hrs</dt>
+                    <dd className="text-sm font-semibold">
                       {w.avgResolutionHours}
                     </dd>
                   </div>
-                  <div className="rounded-lg bg-[#f4f7f3] px-2 py-2">
-                    <dt className="text-[10px] text-[#6d7a71]">Task</dt>
-                    {!w.currentReport && (
-                      <dd className="text-sm font-bold">No Tasks Assigned</dd>
-                    )}
-                    {w.currentReport && (
-                      <dd className="text-sm font-bold">
-                        <ViewTasks currentReports={w.currentReport} />
-                      </dd>
-                    )}
-                    {/* <dd className="text-sm font-bold">{w.currentReport ?? "—"}</dd> */}
-                  </div>
                 </dl>
+
+                {/* A button doesn't fit in a narrow 1/3 stat cell — its own full-width row instead */}
+                <div className="mt-2 flex items-center justify-between gap-2 rounded-lg bg-muted px-3 py-2">
+                  <span className="text-[10px] text-muted-foreground">Task</span>
+                  {!w.currentReport && (
+                    <span className="text-xs font-semibold text-muted-foreground">No task assigned</span>
+                  )}
+                  {w.currentReport && <ViewTasks currentReports={w.currentReport} />}
+                </div>
 
                 {isAdmin && (
                   <div className="mt-3 flex gap-2">
-                    <button
+                    <Button
+                      variant="outline"
+                      size="sm"
                       onClick={() => {
                         setEditingWorker(w);
                         setEditOpen(true);
                       }}
-                      className="flex-1 rounded-lg border border-[#dfe5dc] py-2 text-xs font-bold text-[#25603f] hover:bg-[#eef4ed]"
+                      className="flex-1"
                     >
                       Edit
-                    </button>
-                    <button
-                      onClick={() => handleRemove(w.id)}
-                      className="rounded-lg border border-[#e8d3d1] px-3 py-2 text-xs font-bold text-[#a4544f] hover:bg-[#fbf1f0]"
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => setRemoveTarget(w)}
                     >
                       Remove
-                    </button>
+                    </Button>
                   </div>
                 )}
               </article>
             ))}
           </div>
         )}
-      </section>
+      </SectionCard>
+      )}
+
+      <ConfirmDialog
+        open={!!removeTarget}
+        onOpenChange={(open) => {
+          if (!open) setRemoveTarget(null);
+        }}
+        title="Remove this worker?"
+        description={`${removeTarget?.name ?? "This worker"} will be deleted from the crew and any active assignment is released.`}
+        confirmLabel="Remove worker"
+        onConfirm={async () => {
+          if (!removeTarget) return;
+          await handleRemove(removeTarget.id);
+          setRemoveTarget(null);
+        }}
+      />
 
       {isAdmin && editingWorker && (
         <AddWorkers

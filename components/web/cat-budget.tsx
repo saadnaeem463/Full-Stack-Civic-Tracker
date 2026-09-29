@@ -28,16 +28,18 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 
-const CATEGORIES = ["Roads", "Lightning", "Cleanliness", "Parks"] as const;
-type Category = (typeof CATEGORIES)[number];
+type Category = "Roads" | "Lightning" | "Cleanliness" | "Parks";
 
 const CategoryBudgetAllocation = ({
   remainingCategories,
   onAllocated,
-  budget
+  budget,
+  variant = 'default',
 }: {
   remainingCategories : Category[],
-  onAllocated?: (allocation: { category: Category; amount: number }) => void;budget : number
+  onAllocated?: (allocation: { category: Category; amount: number }) => void;
+  budget : number;
+  variant?: 'default' | 'outline';
 }) => {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -92,20 +94,20 @@ const CategoryBudgetAllocation = ({
     <Dialog>
       <DialogTrigger
         render={
-          <button className="inline-flex items-center gap-2 self-start rounded-lg bg-[#1e5b3e] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#174a32] sm:self-auto" />
+          <Button variant={variant} className="self-start sm:self-auto" />
         }
       >
-        <PlusIcon size={16} className="-mt-0.5 mr-1 inline" />
-        Category Budget Allocation
+        <PlusIcon />
+        Allocate category budget
       </DialogTrigger>
 
-      <DialogContent className="w-full max-w-md rounded-2xl border border-[#dfe5dc] bg-[#fbfcf9] p-5">
+      <DialogContent className="w-full max-w-md rounded-lg border border-border bg-card p-5">
         <DialogHeader>
-          <DialogDescription className="text-[11px] font-bold uppercase tracking-[.12em] text-[#6d7a71]">
-            Decide Budget
+          <DialogDescription className="text-[11px] font-semibold uppercase tracking-[.14em] text-muted-foreground">
+            Decide budget
           </DialogDescription>
-            <span className='text-green-600'>
-            Remaining Budget : {remainingBudget}
+            <span className='text-sm font-medium text-foreground'>
+            Remaining budget: {remainingBudget}
             </span>
         </DialogHeader>
 
@@ -134,7 +136,7 @@ const CategoryBudgetAllocation = ({
                 value={category}
                 onValueChange={(val) => setCategory(val as Category)}
               >
-                <SelectTrigger className="bg-muted/50 w-full rounded-lg border border-[#dfe5dc] text-sm">
+                <SelectTrigger className="bg-muted/50 w-full rounded-lg border border-border text-sm">
                   <SelectValue placeholder="Choose a category" />
                 </SelectTrigger>
                 <SelectContent>
@@ -162,7 +164,7 @@ const CategoryBudgetAllocation = ({
                 placeholder="e.g. 10000000"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
-                className="mt-1.5 w-full rounded-lg border border-[#dfe5dc] bg-white px-3 py-2 text-sm font-normal normal-case tracking-normal text-[#17211b] outline-none focus:border-[#1e5b3e]"
+                className="mt-1.5 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm font-normal normal-case tracking-normal text-foreground outline-none focus:border-primary"
               />
             </FieldContent>
             <FieldDescription>
@@ -174,7 +176,6 @@ const CategoryBudgetAllocation = ({
             <Button
               type="submit"
               disabled={submitting}
-              className="rounded-lg bg-[#1e5b3e] px-3 py-2 text-sm font-bold text-white hover:bg-[#174a32] disabled:opacity-60"
             >
               {submitting ? 'Allocating…' : 'Allocate'}
             </Button>

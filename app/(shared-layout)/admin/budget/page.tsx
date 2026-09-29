@@ -3,6 +3,14 @@ import BudgetAllocation from '@/components/web/budget-allocation'
 import CategoryBudgetAllocation from '@/components/web/cat-budget'
 import React, { useState, useEffect } from 'react'
 import PendingBudgetRequests from '@/components/web/admin/pending-budget-requests'
+import { Button } from '@/components/ui/button'
+import {
+    EmptyState,
+    PageHeading,
+    PageLoading,
+    eyebrowClass,
+    pageContainer,
+} from '@/components/web/admin/primitives'
 
 interface ExpenseProp {
     _id: string
@@ -41,6 +49,7 @@ export default function BudgetPage() {
     const [totalAllocated, setTotalAllocated] = useState(0)
     const [totalSpend, setTotalSpend] = useState(0)
     const [loading, setLoading] = useState(true)
+    const [error, setError] = useState("")
 
     // How much of what's been handed out to categories is still unspent
     const remainingBudget = totalAllocated - totalSpend
@@ -80,9 +89,11 @@ export default function BudgetPage() {
     }
 
     useEffect(() => {
-        Promise.all([fetchBudget(), fetchExpenses(), fetchExpensesByCat()]).finally(() => {
-            setLoading(false)
-        })
+        Promise.all([fetchBudget(), fetchExpenses(), fetchExpensesByCat()])
+            .catch(() => setError("Could not load the budget. Check your connection and try again."))
+            .finally(() => {
+                setLoading(false)
+            })
     }, [])
 
     const pctCommitted = totalAllocated > 0 ? Math.min(100, (totalSpend / totalAllocated) * 100) : 0
@@ -97,85 +108,92 @@ export default function BudgetPage() {
         .slice(0, 6)
 
     if (loading) {
+        return <PageLoading label="Loading budget…" />
+    }
+
+    if (error) {
         return (
-            <div className="flex min-h-screen items-center justify-center bg-[#F5F3EC]">
-                <p className="text-sm text-neutral-400">Loading budget…</p>
+            <div className={pageContainer}>
+                <PageHeading
+                    eyebrow="Financial control"
+                    title="Budget"
+                    description="Set the budget, allocate it across categories, and track every dirham spent."
+                />
+                <EmptyState title="We could not load the budget" description={error} />
+                <div className="mt-4 flex justify-center">
+                    <Button type="button" variant="outline" onClick={() => window.location.reload()}>
+                        Try again
+                    </Button>
+                </div>
             </div>
         )
     }
 
     return (
-        <div className="min-h-screen bg-[#F5F3EC] px-6 py-10 sm:px-10">
+        <div className={pageContainer}>
+            {!budget ? (
+                <div className="rounded-lg border border-border bg-card p-5 shadow-xs">
+                    <p className="mb-4 text-sm font-semibold tracking-tight text-foreground">Decide the total budget</p>
+                    <BudgetAllocation handleSetBudget={handleSetBudget} />
+                </div>
+            ) : !isCatBudAllocated ? (
+                <div className="rounded-lg border border-border bg-card p-5 shadow-xs">
+                    <p className="mb-4 text-sm font-semibold tracking-tight text-foreground">Allocate budget by category</p>
+                    <CategoryBudgetAllocation
+                        remainingCategories={remainingCategories}
+                        onAllocated={handleCategoryAllocation}
+                        budget={budget}
+                    />
+                </div>
+            ) : (
+                <>
+                    <PageHeading
+                        eyebrow="Maintenance funds"
+                        title="Budget"
+                        description="How the maintenance allocation is being consumed across the four service categories."
+                    />
 
-            <div className="mx-auto max-w-4xl">
-                {!budget ? (
-                    <div className="rounded-2xl border border-black/5 bg-white p-8">
-                        <p className="mb-4 text-lg font-medium text-neutral-800">Decide the total budget</p>
-                        <BudgetAllocation handleSetBudget={handleSetBudget} />
-                    </div>
-                ) : !isCatBudAllocated ? (
-                    <div className="rounded-2xl border border-black/5 bg-white p-8">
-                        <p className="mb-4 text-lg font-medium text-neutral-800">Allocate budget by category</p>
-                        <CategoryBudgetAllocation
-                            remainingCategories={remainingCategories}
-                            onAllocated={handleCategoryAllocation}
-                            budget={budget}
-                        />
-                    </div>
-                ) : (
-                    <>
-                        {/* Header */}
-                        <div className="mb-6">
-                            <p className="text-xs font-semibold tracking-widest text-neutral-500">
-                                MAINTENANCE FUNDS
-                            </p>
-                            <h1 className="mt-1 font-serif text-4xl text-neutral-900">Budget</h1>
-                            <p className="mt-2 max-w-md text-sm text-neutral-500">
-                                How the maintenance allocation is being consumed across the four service categories.
-                            </p>
-                        </div>
-
-                        {/* Remaining this year */}
-                        <div className="mb-4 rounded-2xl border border-black/5 bg-white p-6">
-                            <div className="flex items-start justify-between gap-4">
+                    {/* Remaining this year */}
+                    <div className="mb-4 rounded-lg border border-border bg-card p-5 shadow-xs">
+                            <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
                                 <div>
-                                    <p className="text-xs font-semibold tracking-widest text-neutral-500">
-                                        REMAINING THIS YEAR
+                                    <p className={eyebrowClass}>
+                                        Remaining this year
                                     </p>
-                                    <p className="mt-1 text-5xl font-semibold text-[#2F5233]">
+                                    <p className="mt-1 text-3xl font-semibold tracking-tight tabular-nums text-foreground sm:text-4xl">
                                         {formatCurrency(remainingBudget)}
                                     </p>
                                 </div>
-                                <div className="flex items-start gap-8">
-                                    <div className="flex gap-8 pt-1 text-right">
+                                <div className="flex flex-col items-start gap-6 sm:flex-row sm:gap-8">
+                                    <div className="grid w-full grid-cols-1 gap-4 pt-1 text-right sm:flex-1 sm:grid-cols-2 xl:grid-cols-4">
                                         <div>
-                                            <p className="text-xs text-neutral-500">Total budget</p>
-                                            <p className="font-medium text-neutral-900">{formatCurrency(budget)}</p>
+                                            <p className="text-xs text-muted-foreground">Total budget</p>
+                                            <p className="font-medium text-foreground">{formatCurrency(budget)}</p>
                                         </div>
                                         <div>
-                                            <p className="text-xs text-neutral-500">Total Allocated budget</p>
-                                            <p className="font-medium text-neutral-900">{formatCurrency(totalAllocated)}</p>
+                                            <p className="text-xs text-muted-foreground">Total Allocated budget</p>
+                                            <p className="font-medium text-foreground">{formatCurrency(totalAllocated)}</p>
                                         </div>
                                         <div>
-                                            <p className="text-xs text-neutral-500">Spent</p>
-                                            <p className="font-medium text-neutral-900">{formatCurrency(totalSpend)}</p>
+                                            <p className="text-xs text-muted-foreground">Spent</p>
+                                            <p className="font-medium text-foreground">{formatCurrency(totalSpend)}</p>
                                         </div>
                                         <div>
-                                            <p className="text-xs text-neutral-500">Unallocated</p>
-                                            <p className="font-medium text-neutral-900">{formatCurrency(unallocatedBudget)}</p>
+                                            <p className="text-xs text-muted-foreground">Unallocated</p>
+                                            <p className="font-medium text-foreground">{formatCurrency(unallocatedBudget)}</p>
                                         </div>
                                     </div>
-                                    <BudgetAllocation handleSetBudget={(amount) => setBudget((prev) => prev + amount)} />
+                                    <BudgetAllocation variant="outline" handleSetBudget={(amount) => setBudget((prev) => prev + amount)} />
                                 </div>
                             </div>
 
-                            <div className="mt-5 h-2.5 w-full overflow-hidden rounded-full bg-neutral-100">
+                            <div className="mt-5 h-2.5 w-full overflow-hidden rounded-full bg-muted">
                                 <div
-                                    className="h-full rounded-full bg-[#2F5233] transition-all"
+                                    className="h-full rounded-full bg-primary transition-all"
                                     style={{ width: `${pctCommitted}%` }}
                                 />
                             </div>
-                            <p className="mt-2 text-xs text-neutral-500">
+                            <p className="mt-2 text-xs text-muted-foreground">
                                 {Math.round(pctCommitted)}% of the annual maintenance budget committed.
                             </p>
                         </div>
@@ -184,13 +202,14 @@ export default function BudgetPage() {
                         <PendingBudgetRequests onResolved={fetchExpensesByCat} />
 
                         {/* Allocation by category */}
-                        <div className="mb-4 rounded-2xl border border-black/5 bg-white p-6">
-                            <div className="mb-5 flex items-start justify-between gap-4">
+                        <div className="mb-4 rounded-lg border border-border bg-card p-5 shadow-xs">
+                            <div className="mb-5 flex flex-wrap items-start justify-between gap-4">
                                 <div>
-                                    <p className="font-medium text-neutral-900">Allocation by category</p>
-                                    <p className="text-sm text-neutral-500">Spend against each service line.</p>
+                                    <p className="text-sm font-semibold tracking-tight text-foreground">Allocation by category</p>
+                                    <p className="mt-1 text-xs text-muted-foreground">Spend against each service line.</p>
                                 </div>
                                 <CategoryBudgetAllocation
+                                    variant="outline"
                                     remainingCategories={CATEGORIES as unknown as Category[]}
                                     onAllocated={() => fetchExpensesByCat()}
                                     budget={unallocatedBudget}
@@ -204,14 +223,14 @@ export default function BudgetPage() {
                                     return (
                                         <div key={cat.category}>
                                             <div className="mb-2 flex items-baseline justify-between">
-                                                <p className="font-medium text-neutral-900">{cat.category}</p>
-                                                <p className="text-sm text-neutral-500">
+                                                <p className="font-medium text-foreground">{cat.category}</p>
+                                                <p className="text-sm text-muted-foreground">
                                                     {formatCurrency(cat.spend)} of {formatCurrency(cat.allocated)}
                                                 </p>
                                             </div>
-                                            <div className="h-2 w-full overflow-hidden rounded-full bg-neutral-100">
+                                            <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
                                                 <div
-                                                    className={`h-full rounded-full transition-all ${isWarning ? "bg-[#E08A2C]" : "bg-[#A9C1AC]"
+                                                    className={`h-full rounded-full transition-all ${isWarning ? "bg-warning" : "bg-primary/20"
                                                         }`}
                                                     style={{ width: `${pct}%` }}
                                                 />
@@ -223,30 +242,29 @@ export default function BudgetPage() {
                         </div>
 
                         {/* Recent expenses */}
-                        <div className="rounded-2xl border border-black/5 bg-white p-6">
-                            <p className="font-medium text-neutral-900">Recent expenses</p>
-                            <p className="mb-3 text-sm text-neutral-500">Costs recorded against resolved and active reports.</p>
+                        <div className="rounded-lg border border-border bg-card p-5 shadow-xs">
+                            <p className="text-sm font-semibold tracking-tight text-foreground">Recent expenses</p>
+                            <p className="mb-3 mt-1 text-xs text-muted-foreground">Costs recorded against resolved and active reports.</p>
 
-                            <div className="divide-y divide-neutral-100">
+                            <div className="divide-y divide-border">
                                 {recentExpenses.length === 0 && (
-                                    <p className="py-4 text-sm text-neutral-400">No expenses recorded yet.</p>
+                                    <p className="py-4 text-sm text-muted-foreground">No expenses recorded yet.</p>
                                 )}
                                 {recentExpenses.map((exp) => (
                                     <div key={exp._id} className="flex items-center justify-between py-3">
                                         <div>
-                                            <p className="font-medium text-neutral-900">{exp.label}</p>
-                                            <p className="text-xs text-neutral-500">
+                                            <p className="font-medium text-foreground">{exp.label}</p>
+                                            <p className="text-xs text-muted-foreground">
                                                 {exp.reportId} · {exp.category} · {formatDate(exp.createdAt)}
                                             </p>
                                         </div>
-                                        <p className="font-medium text-neutral-900">{formatCurrency(exp.amount)}</p>
+                                        <p className="font-medium text-foreground">{formatCurrency(exp.amount)}</p>
                                     </div>
                                 ))}
                             </div>
                         </div>
                     </>
                 )}
-            </div>
         </div>
     )
 }

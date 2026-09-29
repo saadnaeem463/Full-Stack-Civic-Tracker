@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { PlusIcon } from "lucide-react";
+import { toast } from "sonner";
 import {
   Dialog,
   DialogTrigger,
@@ -10,6 +11,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 import { adaptWorker } from "@/lib/report-adapter";
 
 type Specialty = "Roads crew" | "Electrical" | "Sanitation" | "Parks";
@@ -66,11 +68,13 @@ const AddWorkers = ({
           setEmail("");
           setSpecialty("");
         }
+        toast.success(isEdit ? "Worker updated" : "Worker added");
       } else {
-        console.error(data.error);
+        toast.error(data.error || "Could not save the worker");
       }
     } catch (err) {
       console.log(err);
+      toast.error("Could not save the worker, please try again");
     } finally {
       setSubmitting(false);
     }
@@ -81,37 +85,37 @@ const AddWorkers = ({
       {!isEdit && (
         <DialogTrigger
           render={
-            <button className="inline-flex items-center gap-2 self-start rounded-lg bg-[#1e5b3e] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#174a32] sm:self-auto" />
+            <Button className="self-start sm:self-auto" />
           }
         >
-          <PlusIcon size={16} className="-mt-0.5 mr-1 inline" />
+          <PlusIcon />
           Add worker
         </DialogTrigger>
       )}
 
-      <DialogContent className="w-full max-w-md rounded-2xl border border-[#dfe5dc] bg-[#fbfcf9] p-5">
+      <DialogContent className="w-full max-w-md rounded-lg border border-border bg-card p-5">
         <DialogHeader>
-          <DialogDescription className="text-[11px] font-bold uppercase tracking-[.12em] text-[#6d7a71]">
+          <DialogDescription className="text-[11px] font-semibold uppercase tracking-[.14em] text-muted-foreground">
             {isEdit ? "Edit Worker" : "New Worker"}
           </DialogDescription>
-          <DialogTitle className="font-display text-2xl tracking-[-.03em]">
+          <DialogTitle className="text-lg font-semibold tracking-tight">
             {isEdit ? "Update member" : "Add a new worker"}
           </DialogTitle>
         </DialogHeader>
 
         <form className="mt-4 space-y-3" onSubmit={handleSubmit}>
-          <label className="block text-xs font-bold uppercase tracking-[.12em] text-[#6d7a71]">
+          <label className="block text-xs font-semibold uppercase tracking-[.14em] text-muted-foreground">
             Full name
             <input
               value={fullname}
               onChange={(e) => setFullname(e.target.value)}
               placeholder="e.g. Rosa Delgado"
               required
-              className="mt-1.5 w-full rounded-lg border border-[#dfe5dc] bg-white px-3 py-2 text-sm font-normal normal-case tracking-normal text-[#17211b] outline-none focus:border-[#1e5b3e]"
+              className="mt-1.5 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm font-normal normal-case tracking-normal text-foreground outline-none focus:border-primary"
             />
           </label>
 
-          <label className="block text-xs font-bold uppercase tracking-[.12em] text-[#6d7a71]">
+          <label className="block text-xs font-semibold uppercase tracking-[.14em] text-muted-foreground">
             Contact email
             <input
               type="email"
@@ -119,17 +123,17 @@ const AddWorkers = ({
               onChange={(e) => setEmail(e.target.value)}
               placeholder="name@city.gov"
               required
-              className="mt-1.5 w-full rounded-lg border border-[#dfe5dc] bg-white px-3 py-2 text-sm font-normal normal-case tracking-normal text-[#17211b] outline-none focus:border-[#1e5b3e]"
+              className="mt-1.5 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm font-normal normal-case tracking-normal text-foreground outline-none focus:border-primary"
             />
           </label>
 
-          <label className="block text-xs font-bold uppercase tracking-[.12em] text-[#6d7a71]">
+          <label className="block text-xs font-semibold uppercase tracking-[.14em] text-muted-foreground">
             Specialty
             <select
               value={specialty}
               onChange={(e) => setSpecialty(e.target.value as Specialty)}
               required
-              className="mt-1.5 w-full rounded-lg border border-[#dfe5dc] bg-white px-3 py-2 text-sm font-normal normal-case tracking-normal text-[#17211b] outline-none focus:border-[#1e5b3e]"
+              className="mt-1.5 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm font-normal normal-case tracking-normal text-foreground outline-none focus:border-primary"
             >
               <option value="" disabled>
                 Choose a specialty
@@ -142,10 +146,9 @@ const AddWorkers = ({
           </label>
 
           <DialogFooter className="mt-5 flex justify-end gap-2 border-none bg-transparent p-0">
-            <button
+            <Button
               type="submit"
               disabled={submitting}
-              className="rounded-lg bg-[#1e5b3e] px-3 py-2 text-sm font-bold text-white hover:bg-[#174a32] disabled:opacity-60"
             >
               {isEdit
                 ? submitting
@@ -154,7 +157,7 @@ const AddWorkers = ({
                 : submitting
                   ? "Adding…"
                   : "Add worker"}
-            </button>
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>

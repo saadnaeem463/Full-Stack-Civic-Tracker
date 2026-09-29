@@ -1,7 +1,9 @@
 import React, { useMemo, useState } from "react";
-import { DownloadIcon, InboxIcon, SearchIcon } from "lucide-react";
+import { DownloadIcon, InboxIcon } from "lucide-react";
 import { PageHeading, EmptyState } from "./AdminShell";
 import { StatusBadge } from "./StatusBadge";
+import { Button } from "@/components/ui/button";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Report, ReportStatus, Worker } from "@/data/adminData";
 
 const statuses: ReportStatus[] = ["Reported", "Acknowledged", "In progress", "Resolved"];
@@ -10,7 +12,6 @@ type ReportsProps = {
   reports: Report[];
   workers: Worker[];
   search: string;
-  onSearch: (value: string) => void;
   onOpenReport: (report: Report) => void;
   onStatusChange: (id: string, status: ReportStatus) => void;
   onAssign: (id: string, workerId: string | null) => void;
@@ -24,12 +25,22 @@ const CATEGORY_TO_SPECIALTY: Record<string, string> = {
   "Parks" : "Parks"
 };
 
-export function Reports({ reports, workers, search, onSearch, onOpenReport, onStatusChange, onAssign, onBulkStatus }: ReportsProps) {
+export function Reports({ reports, workers, search, onOpenReport, onStatusChange, onAssign, onBulkStatus }: ReportsProps) {
   const [statusFilter, setStatusFilter] = useState("All");
   const [categoryFilter, setCategoryFilter] = useState("All");
   const [rangeFilter, setRangeFilter] = useState("All time");
   const [flaggedOnly, setFlaggedOnly] = useState(false);
   const [selected, setSelected] = useState<string[]>([]);
+  const [unassignTarget, setUnassignTarget] = useState<Report | null>(null);
+
+  /** Unassigning drops the report back into the queue, so it always asks first. */
+  function handleAssign(report: Report, workerId: string) {
+    if (!workerId && report.assignedTo) {
+      setUnassignTarget(report);
+      return;
+    }
+    onAssign(report.id, workerId || null);
+  }
 
   const visible = useMemo(() => reports.filter((report) => {
     const matchesStatus = statusFilter === "All" || report.status === statusFilter;
@@ -55,127 +66,200 @@ export function Reports({ reports, workers, search, onSearch, onOpenReport, onSt
         title="Reports management"
         description="Review incoming citizen reports, move them through the workflow, and assign the right crew."
         action={
-        <button className="inline-flex items-center gap-2 self-start rounded-lg border border-[#dfe5dc] bg-[#fbfcf9] px-4 py-2.5 text-sm font-semibold text-[#25603f] hover:bg-[#eef4ed] sm:self-auto">
+        <Button variant="outline" size="sm" className="self-start sm:self-auto">
             <DownloadIcon size={16} /> Export CSV
-          </button>
+          </Button>
         } />
       
 
-      <div className="rounded-2xl border border-[#dfe5dc] bg-[#fbfcf9] p-4">
+      <div className="rounded-lg border border-border bg-card p-4">
         <div className="flex flex-wrap items-center gap-2">
-          <label className="flex min-w-[220px] flex-1 items-center gap-2 rounded-lg border border-[#dfe5dc] bg-white px-3 py-2">
-            <SearchIcon size={16} className="text-[#6f7c73]" aria-hidden="true" />
-            <input value={search} onChange={(event) => onSearch(event.target.value)} placeholder="Search reports" aria-label="Search reports" className="min-w-0 flex-1 border-0 p-0 text-sm outline-none" />
-          </label>
           <FilterSelect label="Status" value={statusFilter} onChange={setStatusFilter} options={["All", ...statuses]} />
           <FilterSelect label="Category" value={categoryFilter} onChange={setCategoryFilter} options={["All", "Roads", "Lighting", "Cleanliness", "Parks"]} />
           <FilterSelect label="Date range" value={rangeFilter} onChange={setRangeFilter} options={["All time", "Last 7 days", "Last 30 days"]} />
-          <label className="flex items-center gap-2 rounded-lg border border-[#dfe5dc] bg-white px-3 py-2 text-sm font-medium">
-            <input type="checkbox" checked={flaggedOnly} onChange={(event) => setFlaggedOnly(event.target.checked)} className="h-4 w-4 accent-[#1e5b3e]" />
+          <label className="flex items-center gap-2 rounded-lg border border-border bg-background px-3 py-2 text-sm font-medium">
+            <input type="checkbox" checked={flaggedOnly} onChange={(event) => setFlaggedOnly(event.target.checked)} className="h-4 w-4 accent-primary" />
             Suspicious only
           </label>
         </div>
 
         {selected.length > 0 &&
-        <div className="mt-3 flex flex-wrap items-center gap-3 rounded-xl bg-[#e8f1e7] px-4 py-3">
-            <span className="text-sm font-semibold text-[#1e5b3e]">{selected.length} selected</span>
-            <label className="text-xs font-semibold text-[#3f5546]">
+        <div className="mt-3 flex flex-wrap items-center gap-3 rounded-lg bg-primary/10 px-4 py-3">
+            <span className="text-sm font-semibold text-primary">{selected.length} selected</span>
+            <label className="text-xs font-semibold text-foreground">
               <span className="sr-only">Change status for selected reports</span>
               <select
               defaultValue=""
               onChange={(event) => {if (event.target.value) {onBulkStatus(selected, event.target.value as ReportStatus);setSelected([]);}}}
-              className="ml-1 rounded-lg border border-[#c5d8c6] bg-white px-2.5 py-1.5 text-xs font-semibold outline-none">
+              className="ml-1 rounded-lg border border-border bg-background px-2.5 py-1.5 text-xs font-semibold outline-none focus:border-primary">
               
                 <option value="">Change status…</option>
                 {statuses.map((status) => <option key={status}>{status}</option>)}
               </select>
             </label>
-            <button className="rounded-lg border border-[#c5d8c6] bg-white px-2.5 py-1.5 text-xs font-bold text-[#25603f]">Export selection</button>
-            <button onClick={() => setSelected([])} className="ml-auto text-xs font-bold text-[#4a6b54] hover:underline">Clear</button>
+            <Button variant="outline" size="xs">Export selection</Button>
+            <Button variant="ghost" size="xs" className="ml-auto" onClick={() => setSelected([])}>Clear</Button>
           </div>
         }
 
-        <div className="mt-4 overflow-x-auto">
-          {visible.length === 0 ?
-          <EmptyState title="No reports match these filters" description="Try clearing the search term or widening the status, category, or date filters." icon={<InboxIcon size={20} />} /> :
-
-          <table className="w-full min-w-[980px] border-collapse text-left">
-              <thead>
-                <tr className="border-b border-[#dfe5dc] text-[11px] font-bold uppercase tracking-[.1em] text-[#6d7a71]">
-                  <th scope="col" className="px-2 py-2.5">
-                    <input
-                    type="checkbox"
-                    aria-label="Select all reports"
-                    checked={allSelected}
-                    onChange={(event) => setSelected(event.target.checked ? visible.map((report) => report.id) : [])}
-                    className="h-4 w-4 accent-[#1e5b3e]" />
-                  
-                  </th>
-                  <th scope="col" className="px-2 py-2.5">Report</th>
-                  <th scope="col" className="px-2 py-2.5">Category</th>
-                  <th scope="col" className="px-2 py-2.5">Reporter</th>
-                  <th scope="col" className="px-2 py-2.5">Status</th>
-                  <th scope="col" className="px-2 py-2.5">Votes</th>
-                  <th scope="col" className="px-2 py-2.5">Date</th>
-                  <th scope="col" className="px-2 py-2.5">Assigned</th>
-                  <th scope="col" className="px-2 py-2.5 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {visible.map((report) =>
-              <tr key={report.id} className="border-b border-[#eef2ec] align-middle last:border-0 hover:bg-[#f5f8f4]">
-                    <td className="px-2 py-3">
-                      <input type="checkbox" aria-label={`Select ${report.id}`} checked={selected.includes(report.id)} onChange={() => toggleRow(report.id)} className="h-4 w-4 accent-[#1e5b3e]" />
-                    </td>
-                    <td className="max-w-[280px] px-2 py-3">
-                      <button onClick={() => onOpenReport(report)} className="text-left">
-                        <span className="block truncate text-sm font-semibold hover:text-[#1e5b3e]">{report.title}</span>
-                        <span className="mt-0.5 block truncate text-xs text-[#6d7a71]">{report.id} · {report.address}</span>
-                      </button>
-                      {report.suspicious && <span className="mt-1 inline-block rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-bold text-red-700">Flagged</span>}
-                    </td>
-                    <td className="px-2 py-3 text-sm text-[#4d5b52]">{report.category}</td>
-                    <td className="px-2 py-3 text-sm text-[#4d5b52]">{report.reporter}</td>
-                    <td className="px-2 py-3">
-                      <label>
-                        <span className="sr-only">Status for {report.id}</span>
-                        <select
-                      value={report.status}
-                      onChange={(event) => onStatusChange(report.id, event.target.value as ReportStatus)}
-                      className="rounded-lg border border-[#dfe5dc] bg-white px-2 py-1.5 text-xs font-semibold outline-none focus:border-[#1e5b3e]">
-                      
-                          {statuses.map((status) => <option key={status}>{status}</option>)}
-                        </select>
-                      </label>
-                    </td>
-                    <td className="px-2 py-3 text-sm tabular-nums text-[#4d5b52]">{report.upvotes}</td>
-                    <td className="whitespace-nowrap px-2 py-3 text-sm text-[#4d5b52]">{report.createdLabel}</td>
-<td className="px-2 py-3">
+        {visible.length === 0 ? (
+          <div className="mt-4">
+            <EmptyState title="No reports match these filters" description="Try clearing the search term or widening the status, category, or date filters." icon={<InboxIcon size={20} />} />
+          </div>
+        ) : (
+          <>
+            {/* Desktop / tablet: table with a sticky identity column */}
+            <div className="mt-4 hidden overflow-x-auto md:block">
+              <table className="w-full min-w-[980px] border-collapse text-left">
+                <thead>
+                  <tr className="border-b border-border text-[11px] font-semibold uppercase tracking-[.1em] text-muted-foreground">
+                    <th scope="col" className="sticky left-0 z-10 w-10 bg-card px-2 py-2.5">
+                      <input
+                      type="checkbox"
+                      aria-label="Select all reports"
+                      checked={allSelected}
+                      onChange={(event) => setSelected(event.target.checked ? visible.map((report) => report.id) : [])}
+                      className="h-4 w-4 accent-primary" />
+                    
+                    </th>
+                    <th scope="col" className="sticky left-10 z-10 bg-card px-2 py-2.5 shadow-[8px_0_8px_-8px_rgba(0,0,0,0.25)]">Report</th>
+                    <th scope="col" className="px-2 py-2.5">Category</th>
+                    <th scope="col" className="px-2 py-2.5">Reporter</th>
+                    <th scope="col" className="px-2 py-2.5">Status</th>
+                    <th scope="col" className="px-2 py-2.5">Votes</th>
+                    <th scope="col" className="px-2 py-2.5">Date</th>
+                    <th scope="col" className="px-2 py-2.5">Assigned</th>
+                    <th scope="col" className="px-2 py-2.5 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {visible.map((report) =>
+                <tr key={report.id} className="border-b border-border align-middle last:border-0 hover:bg-muted/50">
+                      <td className="sticky left-0 z-10 bg-card px-2 py-3 hover:bg-muted/50">
+                        <input type="checkbox" aria-label={`Select ${report.id}`} checked={selected.includes(report.id)} onChange={() => toggleRow(report.id)} className="h-4 w-4 accent-primary" />
+                      </td>
+                      <td className="sticky left-10 z-10 max-w-[280px] bg-card px-2 py-3 shadow-[8px_0_8px_-8px_rgba(0,0,0,0.25)] hover:bg-muted/50">
+                        <button onClick={() => onOpenReport(report)} className="text-left">
+                          <span className="block truncate text-sm font-semibold hover:text-primary">{report.title}</span>
+                          <span className="mt-0.5 block truncate text-xs text-muted-foreground">{report.id} · {report.address}</span>
+                        </button>
+                        {report.suspicious && <span className="mt-1 inline-block rounded-full bg-destructive/10 px-2 py-0.5 text-[10px] font-semibold text-destructive">Flagged</span>}
+                      </td>
+                      <td className="px-2 py-3 text-sm">{report.category}</td>
+                      <td className="px-2 py-3 text-sm">{report.reporter}</td>
+                      <td className="px-2 py-3">
                         <label>
-                          <span className="sr-only">Assign worker for {report.id}</span>
+                          <span className="sr-only">Status for {report.id}</span>
                           <select
-                            value={report.assignedTo ?? ""}
-                            onChange={(event) => onAssign(report.id, event.target.value || null)}
-                            className="max-w-[140px] rounded-lg border border-[#dfe5dc] bg-white px-2 py-1.5 text-xs outline-none focus:border-[#1e5b3e]">
-                            <option value="">Unassigned</option>
-                            {workers
-                              .filter((worker) => worker.specialty === CATEGORY_TO_SPECIALTY[report.category])
-                              .map((worker) => (
-                                <option key={worker.id} value={worker.id}>{worker.name}</option>
-                              ))}
+                        value={report.status}
+                        onChange={(event) => onStatusChange(report.id, event.target.value as ReportStatus)}
+                        className="rounded-lg border border-border bg-background px-2 py-1.5 text-xs font-semibold outline-none focus:border-primary">
+                        
+                            {statuses.map((status) => <option key={status}>{status}</option>)}
                           </select>
                         </label>
                       </td>
-                    <td className="px-2 py-3 text-right">
-                      <button onClick={() => onOpenReport(report)} className="rounded-lg border border-[#dfe5dc] px-2.5 py-1.5 text-xs font-bold text-[#25603f] hover:bg-[#eef4ed]">View</button>
-                    </td>
-                  </tr>
-              )}
-              </tbody>
-            </table>
-          }
-        </div>
-        <div className="mt-3 flex items-center justify-between text-xs text-[#6d7a71]">
+                      <td className="px-2 py-3 text-sm tabular-nums">{report.upvotes}</td>
+                      <td className="whitespace-nowrap px-2 py-3 text-sm">{report.createdLabel}</td>
+                      <td className="px-2 py-3">
+                          <label>
+                            <span className="sr-only">Assign worker for {report.id}</span>
+                            <select
+                              value={report.assignedTo ?? ""}
+                              onChange={(event) => handleAssign(report, event.target.value)}
+                              className="max-w-[140px] rounded-lg border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary">
+                              <option value="">Unassigned</option>
+                              {workers
+                                .filter((worker) => worker.specialty === CATEGORY_TO_SPECIALTY[report.category])
+                                .map((worker) => (
+                                  <option key={worker.id} value={worker.id}>{worker.name}</option>
+                                ))}
+                            </select>
+                          </label>
+                        </td>
+                      <td className="px-2 py-3 text-right">
+                        <Button variant="outline" size="xs" onClick={() => onOpenReport(report)}>View</Button>
+                      </td>
+                    </tr>
+                )}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile: stacked cards instead of a cramped table */}
+            <ul className="mt-4 space-y-3 md:hidden">
+              {visible.map((report) => (
+                <li key={report.id} className="rounded-lg border border-border bg-background p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <button onClick={() => onOpenReport(report)} className="min-w-0 flex-1 text-left">
+                      <span className="block truncate text-sm font-semibold">{report.title}</span>
+                      <span className="mt-0.5 block truncate text-xs text-muted-foreground">{report.id} · {report.address}</span>
+                    </button>
+                    <StatusBadge status={report.status} />
+                  </div>
+
+                  {report.suspicious && (
+                    <span className="mt-2 inline-block rounded-full bg-destructive/10 px-2 py-0.5 text-[10px] font-semibold text-destructive">
+                      Flagged
+                    </span>
+                  )}
+
+                  <dl className="mt-3 grid grid-cols-2 gap-2 text-xs">
+                    <div className="rounded-lg bg-muted px-3 py-2">
+                      <dt className="text-muted-foreground">Category</dt>
+                      <dd className="mt-0.5 font-medium text-foreground">{report.category}</dd>
+                    </div>
+                    <div className="rounded-lg bg-muted px-3 py-2">
+                      <dt className="text-muted-foreground">Reporter</dt>
+                      <dd className="mt-0.5 font-medium text-foreground">{report.reporter}</dd>
+                    </div>
+                    <div className="rounded-lg bg-muted px-3 py-2">
+                      <dt className="text-muted-foreground">Votes</dt>
+                      <dd className="mt-0.5 font-medium tabular-nums text-foreground">{report.upvotes}</dd>
+                    </div>
+                    <div className="rounded-lg bg-muted px-3 py-2">
+                      <dt className="text-muted-foreground">Date</dt>
+                      <dd className="mt-0.5 font-medium text-foreground">{report.createdLabel}</dd>
+                    </div>
+                  </dl>
+
+                  <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+                    <label className="flex-1 text-xs font-semibold text-muted-foreground">
+                      <span className="sr-only">Status for {report.id}</span>
+                      <select
+                        value={report.status}
+                        onChange={(event) => onStatusChange(report.id, event.target.value as ReportStatus)}
+                        className="mt-1 w-full rounded-lg border border-border bg-card px-2.5 py-2 text-sm font-medium text-foreground outline-none focus:border-primary"
+                      >
+                        {statuses.map((status) => <option key={status}>{status}</option>)}
+                      </select>
+                    </label>
+                    <label className="flex-1 text-xs font-semibold text-muted-foreground">
+                      <span className="sr-only">Assign worker for {report.id}</span>
+                      <select
+                        value={report.assignedTo ?? ""}
+                        onChange={(event) => handleAssign(report, event.target.value)}
+                        className="mt-1 w-full rounded-lg border border-border bg-card px-2.5 py-2 text-sm text-foreground outline-none focus:border-primary"
+                      >
+                        <option value="">Unassigned</option>
+                        {workers
+                          .filter((worker) => worker.specialty === CATEGORY_TO_SPECIALTY[report.category])
+                          .map((worker) => (
+                            <option key={worker.id} value={worker.id}>{worker.name}</option>
+                          ))}
+                      </select>
+                    </label>
+                  </div>
+
+                  <Button variant="outline" size="sm" className="mt-3 w-full" onClick={() => onOpenReport(report)}>
+                    View report
+                  </Button>
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
+        <div className="mt-3 flex items-center justify-between text-xs text-muted-foreground">
           <span>Showing {visible.length} of {reports.length} reports</span>
           <div className="flex items-center gap-1">
             <StatusBadge status="Reported" />
@@ -183,15 +267,29 @@ export function Reports({ reports, workers, search, onSearch, onOpenReport, onSt
           </div>
         </div>
       </div>
+
+      <ConfirmDialog
+        open={!!unassignTarget}
+        onOpenChange={(open) => {
+          if (!open) setUnassignTarget(null);
+        }}
+        title="Unassign this worker?"
+        description={`"${unassignTarget?.title ?? "This report"}" goes back to the unassigned queue until someone picks it up.`}
+        confirmLabel="Unassign"
+        onConfirm={() => {
+          if (unassignTarget) onAssign(unassignTarget.id, null);
+          setUnassignTarget(null);
+        }}
+      />
     </>);
 
 }
 
 function FilterSelect({ label, value, onChange, options }: {label: string;value: string;onChange: (value: string) => void;options: string[];}) {
   return (
-    <label className="text-xs font-semibold text-[#5b6960]">
+    <label className="text-xs font-semibold text-muted-foreground">
       <span className="sr-only">{label}</span>
-      <select value={value} onChange={(event) => onChange(event.target.value)} className="rounded-lg border border-[#dfe5dc] bg-white px-3 py-2 text-sm font-medium outline-none focus:border-[#1e5b3e]">
+      <select value={value} onChange={(event) => onChange(event.target.value)} className="rounded-lg border border-border bg-background px-3 py-2 text-sm font-medium outline-none focus:border-primary">
         {options.map((option) => <option key={option} value={option}>{label}: {option}</option>)}
       </select>
     </label>);

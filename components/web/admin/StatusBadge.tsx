@@ -5,13 +5,13 @@ import { ReportStatus } from "@/data/adminData";
 type StatusEntry = { className: string; Icon: typeof ClockIcon };
 
 const statusConfig: Record<ReportStatus, StatusEntry> = {
-  Reported: { className: "bg-red-100 text-red-700", Icon: AlertCircleIcon },
-  Acknowledged: { className: "bg-amber-100 text-amber-700", Icon: ClockIcon },
-  "In progress": { className: "bg-amber-100 text-amber-800", Icon: WrenchIcon },
-  Resolved: { className: "bg-green-100 text-green-700", Icon: CheckCircle2Icon },
+  Reported: { className: "bg-destructive/10 text-destructive", Icon: AlertCircleIcon },
+  Acknowledged: { className: "bg-info/10 text-info", Icon: ClockIcon },
+  "In progress": { className: "bg-warning/10 text-warning", Icon: WrenchIcon },
+  Resolved: { className: "bg-success/10 text-success", Icon: CheckCircle2Icon },
 };
 
-const fallback: StatusEntry = { className: "bg-gray-100 text-gray-700", Icon: AlertCircleIcon };
+const fallback: StatusEntry = { className: "bg-muted text-muted-foreground", Icon: AlertCircleIcon };
 
 export function StatusBadge({ status }: { status: ReportStatus }) {
   const entry = statusConfig[status] ?? fallback;
