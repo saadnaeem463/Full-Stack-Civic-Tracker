@@ -7,6 +7,7 @@ import { Reports } from "./Reports"
 import { ReportDetailsDrawer } from "./ReportDetailsDrawer"
 import { Report as UIReport, ReportStatus } from "@/data/adminData"
 import { adaptReport, adaptWorker } from "@/lib/report-adapter"
+import { buildReportCodes } from "@/lib/report-code"
 import { getMe } from "@/lib/services/auth.services"
 import { useAdminSearch } from "./AdminShell"
 import { Button } from "@/components/ui/button"
@@ -273,6 +274,7 @@ export function ReportPanel() {
   }
 
   const openReport = reports.find((r) => r.id === openReportId) ?? null
+  const openCode = openReport ? buildReportCodes(reports.map((r) => r.id)).get(openReport.id) : undefined
 
   return (
     <>
@@ -289,6 +291,7 @@ export function ReportPanel() {
         <ReportDetailsDrawer
           actor={actor}
           report={openReport}
+          code={openCode}
           workers={workers}
           onClose={() => setOpenReportId(null)}
           onStatusChange={onStatusChange}

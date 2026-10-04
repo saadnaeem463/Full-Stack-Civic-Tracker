@@ -5,6 +5,7 @@ import { StatusBadge } from "./StatusBadge";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Report, ReportStatus, Worker } from "@/data/adminData";
+import { buildReportCodes } from "@/lib/report-code";
 
 const statuses: ReportStatus[] = ["Reported", "Acknowledged", "In progress", "Resolved"];
 
@@ -32,6 +33,8 @@ export function Reports({ reports, workers, search, onOpenReport, onStatusChange
   const [flaggedOnly, setFlaggedOnly] = useState(false);
   const [selected, setSelected] = useState<string[]>([]);
   const [unassignTarget, setUnassignTarget] = useState<Report | null>(null);
+  const codes = useMemo(() => buildReportCodes(reports.map((r) => r.id)), [reports]);
+  const codeOf = (id: string) => codes.get(id) ?? id;
 
   /** Unassigning drops the report back into the queue, so it always asks first. */
   function handleAssign(report: Report, workerId: string) {
@@ -49,9 +52,9 @@ export function Reports({ reports, workers, search, onOpenReport, onStatusChange
     const matchesRange = rangeFilter === "All time" ||
     rangeFilter === "Last 7 days" && report.date >= "2026-08-04" ||
     rangeFilter === "Last 30 days" && report.date >= "2026-07-12";
-    const haystack = `${report.title} ${report.address} ${report.reporter} ${report.id}`.toLowerCase();
+    const haystack = `${report.title} ${report.address} ${report.reporter} ${codeOf(report.id)}`.toLowerCase();
     return matchesStatus && matchesCategory && matchesFlag && matchesRange && haystack.includes(search.toLowerCase());
-  }), [reports, statusFilter, categoryFilter, rangeFilter, flaggedOnly, search]);
+  }), [reports, statusFilter, categoryFilter, rangeFilter, flaggedOnly, search, codes]);
 
   const allSelected = visible.length > 0 && selected.length === visible.length;
 
@@ -110,7 +113,7 @@ export function Reports({ reports, workers, search, onOpenReport, onStatusChange
           <>
             {/* Desktop / tablet: table with a sticky identity column */}
             <div className="mt-4 hidden overflow-x-auto md:block">
-              <table className="w-full min-w-[980px] border-collapse text-left">
+              <table className="w-full min-w-[860px] border-collapse text-left">
                 <thead>
                   <tr className="border-b border-border text-[11px] font-semibold uppercase tracking-[.1em] text-muted-foreground">
                     <th scope="col" className="sticky left-0 z-10 w-10 bg-card px-2 py-2.5">
@@ -136,20 +139,20 @@ export function Reports({ reports, workers, search, onOpenReport, onStatusChange
                   {visible.map((report) =>
                 <tr key={report.id} className="border-b border-border align-middle last:border-0 hover:bg-muted/50">
                       <td className="sticky left-0 z-10 bg-card px-2 py-3 hover:bg-muted/50">
-                        <input type="checkbox" aria-label={`Select ${report.id}`} checked={selected.includes(report.id)} onChange={() => toggleRow(report.id)} className="h-4 w-4 accent-primary" />
+                        <input type="checkbox" aria-label={`Select ${codeOf(report.id)}`} checked={selected.includes(report.id)} onChange={() => toggleRow(report.id)} className="h-4 w-4 accent-primary" />
                       </td>
-                      <td className="sticky left-10 z-10 max-w-[280px] bg-card px-2 py-3 shadow-[8px_0_8px_-8px_rgba(0,0,0,0.25)] hover:bg-muted/50">
-                        <button onClick={() => onOpenReport(report)} className="text-left">
+                      <td className="sticky left-10 z-10 w-[230px] min-w-[230px] max-w-[230px] overflow-hidden bg-card px-2 py-3 shadow-[8px_0_8px_-8px_rgba(0,0,0,0.25)] hover:bg-muted/50">
+                        <button onClick={() => onOpenReport(report)} className="block w-full min-w-0 text-left">
                           <span className="block truncate text-sm font-semibold hover:text-primary">{report.title}</span>
-                          <span className="mt-0.5 block truncate text-xs text-muted-foreground">{report.id} · {report.address}</span>
+                          <span className="mt-0.5 block truncate font-mono text-xs text-muted-foreground">{codeOf(report.id)}</span>
                         </button>
                         {report.suspicious && <span className="mt-1 inline-block rounded-full bg-destructive/10 px-2 py-0.5 text-[10px] font-semibold text-destructive">Flagged</span>}
                       </td>
-                      <td className="px-2 py-3 text-sm">{report.category}</td>
-                      <td className="px-2 py-3 text-sm">{report.reporter}</td>
+                      <td className="whitespace-nowrap px-2 py-3 text-sm">{report.category}</td>
+                      <td className="max-w-[140px] truncate px-2 py-3 text-sm">{report.reporter}</td>
                       <td className="px-2 py-3">
                         <label>
-                          <span className="sr-only">Status for {report.id}</span>
+                          <span className="sr-only">Status for {codeOf(report.id)}</span>
                           <select
                         value={report.status}
                         onChange={(event) => onStatusChange(report.id, event.target.value as ReportStatus)}
@@ -163,7 +166,7 @@ export function Reports({ reports, workers, search, onOpenReport, onStatusChange
                       <td className="whitespace-nowrap px-2 py-3 text-sm">{report.createdLabel}</td>
                       <td className="px-2 py-3">
                           <label>
-                            <span className="sr-only">Assign worker for {report.id}</span>
+                            <span className="sr-only">Assign worker for {codeOf(report.id)}</span>
                             <select
                               value={report.assignedTo ?? ""}
                               onChange={(event) => handleAssign(report, event.target.value)}
@@ -193,7 +196,7 @@ export function Reports({ reports, workers, search, onOpenReport, onStatusChange
                   <div className="flex items-start justify-between gap-3">
                     <button onClick={() => onOpenReport(report)} className="min-w-0 flex-1 text-left">
                       <span className="block truncate text-sm font-semibold">{report.title}</span>
-                      <span className="mt-0.5 block truncate text-xs text-muted-foreground">{report.id} · {report.address}</span>
+                      <span className="mt-0.5 block truncate font-mono text-xs text-muted-foreground">{codeOf(report.id)}</span>
                     </button>
                     <StatusBadge status={report.status} />
                   </div>
@@ -225,7 +228,7 @@ export function Reports({ reports, workers, search, onOpenReport, onStatusChange
 
                   <div className="mt-3 flex flex-col gap-2 sm:flex-row">
                     <label className="flex-1 text-xs font-semibold text-muted-foreground">
-                      <span className="sr-only">Status for {report.id}</span>
+                      <span className="sr-only">Status for {codeOf(report.id)}</span>
                       <select
                         value={report.status}
                         onChange={(event) => onStatusChange(report.id, event.target.value as ReportStatus)}
@@ -235,7 +238,7 @@ export function Reports({ reports, workers, search, onOpenReport, onStatusChange
                       </select>
                     </label>
                     <label className="flex-1 text-xs font-semibold text-muted-foreground">
-                      <span className="sr-only">Assign worker for {report.id}</span>
+                      <span className="sr-only">Assign worker for {codeOf(report.id)}</span>
                       <select
                         value={report.assignedTo ?? ""}
                         onChange={(event) => handleAssign(report, event.target.value)}

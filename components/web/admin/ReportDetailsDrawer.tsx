@@ -11,6 +11,8 @@ const statuses: ReportStatus[] = ["Reported", "Acknowledged", "In progress", "Re
 
 type DrawerProps = {
   report: Report;
+  /** short display code, e.g. TASK-0007 */
+  code?: string;
   workers: Worker[];
   onClose: () => void;
   onStatusChange: (id: string, status: ReportStatus) => void;
@@ -28,7 +30,7 @@ const CATEGORY_TO_SPECIALTY: Record<string, string> = {
   "Parks": "Parks"
 };
 
-export function ReportDetailsDrawer({ report: initialReport, workers, onClose, onStatusChange, onAssign, onAddNote, onFlag, actor }: DrawerProps) {
+export function ReportDetailsDrawer({ report: initialReport, code, workers, onClose, onStatusChange, onAssign, onAddNote, onFlag, actor }: DrawerProps) {
   const [report, setReport] = useState<Report>(initialReport);
   const [note, setNote] = useState("");
   const [flagOpen, setFlagOpen] = useState(false);
@@ -69,12 +71,12 @@ export function ReportDetailsDrawer({ report: initialReport, workers, onClose, o
   return (
     <div className="fixed inset-0 z-50 flex justify-end">
       <button className="absolute inset-0 bg-foreground/40" aria-label="Close report details" onClick={onClose} />
-      <section className="relative flex h-full w-full max-w-[620px] flex-col overflow-y-auto bg-card shadow-md" role="dialog" aria-modal="true" aria-label={`Report ${report.id}`}>
+      <section className="relative flex h-full w-full max-w-[620px] flex-col overflow-y-auto bg-card shadow-md" role="dialog" aria-modal="true" aria-label={`Report ${code ?? report.title}`}>
         <header className="sticky top-0 z-10 border-b border-border bg-card/95 px-5 py-4 backdrop-blur">
           <div className="flex items-start justify-between gap-4">
             <div>
               <div className="flex items-center gap-2">
-                <span className="text-[11px] font-semibold uppercase tracking-[.14em] text-muted-foreground">{report.id}</span>
+                <span className="text-[11px] font-semibold uppercase tracking-[.14em] text-muted-foreground">{code ?? "Report"}</span>
                 <StatusBadge status={report.status} />
                 {report.suspicious && <span className="rounded-full bg-destructive/10 px-2 py-0.5 text-[10px] font-semibold text-destructive">Flagged</span>}
               </div>
@@ -203,7 +205,7 @@ export function ReportDetailsDrawer({ report: initialReport, workers, onClose, o
         {flagOpen && (
           <div className="fixed inset-0 z-50 grid place-items-center bg-foreground/45 p-4">
             <div className="w-full max-w-md rounded-lg border border-border bg-card p-5" role="dialog" aria-modal="true" aria-label="Confirm flag report">
-              <h3 className="text-xl font-semibold tracking-tight">Flag {report.id} as fake?</h3>
+              <h3 className="text-xl font-semibold tracking-tight">Flag {code ?? "this report"} as fake?</h3>
               <p className="mt-2 text-sm leading-6 text-muted-foreground">This hides the report from the public map and records the reason in the audit log.</p>
               <label className="mt-4 block text-xs font-semibold uppercase tracking-[.14em] text-muted-foreground">
                 Reason (required)

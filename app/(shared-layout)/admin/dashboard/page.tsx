@@ -346,14 +346,13 @@ export default function AdminDashboard() {
               <div className="min-w-0">
                 <p className="truncate font-medium text-foreground">{r.title}</p>
                 <p className="mt-0.5 truncate text-xs text-muted-foreground">
-                  {[r.code, r.address, r.area].filter(Boolean).join(" · ")}
-                  {r.createdAt ? ` · ${dateShort(r.createdAt)}` : ""}
+                  {[r.code, r.createdAt ? dateShort(r.createdAt) : ""].filter(Boolean).join(" · ")}
                 </p>
               </div>
               <div className="flex shrink-0 items-center gap-3">
                 <StatusBadge status={r.status} />
                 <a
-                  href={`/admin/reports/${r._id}`}
+                  href="/admin/reports"
                   className={buttonVariants({ variant: "outline", size: "xs" })}
                 >
                   View

@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table"
 import { toast } from "sonner"
+import { buildReportCodes } from "@/lib/report-code"
 import { Trash2Icon, UserIcon, FileTextIcon, SearchIcon } from "lucide-react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog"
 
@@ -97,9 +98,10 @@ export default function AdminSettings() {
         (u.role ?? "").toLowerCase().includes(userSearch.toLowerCase())
     )
 
+    const reportCodes = buildReportCodes(reports.map((r) => r._id))
     const filteredReports = reports.filter(r => 
         (r.title ?? "").toLowerCase().includes(reportSearch.toLowerCase()) ||
-        (r._id ?? "").toLowerCase().includes(reportSearch.toLowerCase()) ||
+        (reportCodes.get(r._id) ?? "").toLowerCase().includes(reportSearch.toLowerCase()) ||
         (r.status ?? "").toLowerCase().includes(reportSearch.toLowerCase())
     )
 
@@ -191,7 +193,7 @@ export default function AdminSettings() {
 
             {/* Users Management Dialog */}
             <Dialog open={showUsersDialog} onOpenChange={setShowUsersDialog}>
-                <DialogContent className="max-w-3xl max-h-[80vh]">
+                <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-3xl">
                     <DialogHeader>
                         <DialogTitle>Manage Users</DialogTitle>
                         <DialogDescription>
@@ -272,7 +274,7 @@ export default function AdminSettings() {
 
             {/* Reports Management Dialog */}
             <Dialog open={showReportsDialog} onOpenChange={setShowReportsDialog}>
-                <DialogContent className="max-w-4xl max-h-[80vh]">
+                <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-4xl">
                     <DialogHeader>
                         <DialogTitle>Manage Reports</DialogTitle>
                         <DialogDescription>
@@ -293,7 +295,7 @@ export default function AdminSettings() {
                             <Table>
                                 <TableHeader>
                                     <TableRow>
-                                        <TableHead>Report ID</TableHead>
+                                        <TableHead>Report</TableHead>
                                         <TableHead>Title</TableHead>
                                         <TableHead>Category</TableHead>
                                         <TableHead>Status</TableHead>
@@ -312,7 +314,7 @@ export default function AdminSettings() {
                                     ) : (
                                         filteredReports.map((report) => (
                                             <TableRow key={report._id}>
-                                                <TableCell className="font-mono text-sm">{report._id}</TableCell>
+                                                <TableCell className="whitespace-nowrap font-mono text-sm">{reportCodes.get(report._id) ?? "—"}</TableCell>
                                                 <TableCell className="max-w-[200px] truncate">{report.title}</TableCell>
                                                 <TableCell>
                                                     <Badge variant="secondary">{report.issueType}</Badge>

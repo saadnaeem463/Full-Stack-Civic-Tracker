@@ -6,10 +6,16 @@ import { NextRequest, NextResponse } from "next/server";
 
 
 
+import { buildReportCodes } from "@/lib/report-code";
+
 export async function GET(req:NextRequest){
     try {
         const totalSpend=await CategoryBudget.aggregate([{$group : {_id : null, spend : {$sum : "$spend"},totalAllocated : {$sum : '$allocated'}}}])
-        const recentReports=await Report.find().sort({'createdAt':-1}).limit(7)
+        const recentDocs=await Report.find().sort({'createdAt':-1}).limit(7)
+        // same TASK-000N numbering as the reports table, computed over every report
+        const allIds=(await Report.find().select('_id').lean()).map((r)=>String(r._id))
+        const codes=buildReportCodes(allIds)
+        const recentReports=recentDocs.map((doc)=>({...doc.toObject(), code: codes.get(String(doc._id))}))
         const [reports]=await Report.aggregate([
             {
                 $facet:{
