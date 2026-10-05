@@ -71,15 +71,19 @@ export function ReportPanel() {
     }
   }
 
-  /** every mutation gets the same failure feedback instead of failing silently */
-  async function request(url: string, init: RequestInit, failureMessage: string) {
+  /** every mutation gets the same failure feedback; resolves to the parsed JSON body, or null on failure */
+  async function request(url: string, init: RequestInit, failureMessage: string): Promise<Record<string, any> | null> {
     try {
       const res = await fetch(url, init)
+      if (res.status === 401) {
+        window.location.assign("/auth/login")
+        return null
+      }
       if (!res.ok) throw new Error(failureMessage)
-      return true
+      return await res.json().catch(() => ({}))
     } catch (error) {
       toast.error(error instanceof Error ? error.message : failureMessage)
-      return false
+      return null
     }
   }
 
@@ -163,6 +167,7 @@ export function ReportPanel() {
       body: JSON.stringify({ reportIds: [id], status }),
     }, "Could not change the report status")
     if (!updated) return
+    for (const r of updated.reports ?? []) updateReportInState(adaptReport(r))
 
     const audit = {
       actorId: actor._id,
@@ -186,6 +191,7 @@ export function ReportPanel() {
       body: JSON.stringify({ reportIds: ids, status }),
     }, "Could not change the report statuses")
     if (!updated) return
+    for (const r of updated.reports ?? []) updateReportInState(adaptReport(r))
 
     const audit = {
       actorId: actor._id,
@@ -209,6 +215,8 @@ export function ReportPanel() {
       body: JSON.stringify({ reportId: id, workerId }),
     }, "Could not update the assignment")
     if (!assigned) return
+    if (assigned.report) updateReportInState(adaptReport(assigned.report))
+    loadWorkers()
     
     const audit = {
       actorId: actor._id,

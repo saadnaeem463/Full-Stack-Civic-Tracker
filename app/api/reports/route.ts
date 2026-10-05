@@ -4,7 +4,7 @@ import { verifyToken } from "@/lib/jwt";
 import { Report } from "@/models/report";
 import { cookies } from "next/headers";
 import { reportForm } from "@/app/schemas/auth";
-import { pusherServer } from "@/lib/pusher";
+import { safeTrigger } from "@/lib/pusher";
 import { REPORTS_CHANNEL,NEW_REPORT_EVENT } from "@/lib/pusher-events";
 import { User } from "@/models/user";
 import { notify } from "@/lib/notifications";
@@ -43,9 +43,7 @@ export async function POST(request:Request){
         neighborhood: parsed.data.neighborhood ?? null
         })
 
-        pusherServer
-        .trigger(REPORTS_CHANNEL,NEW_REPORT_EVENT,report)
-        .catch((pusherErr) => console.error("Pusher trigger failed:", pusherErr));
+        await safeTrigger(REPORTS_CHANNEL,NEW_REPORT_EVENT,report)
 
         // Fan out to every staff member (admins AND moderators) at write time
         const reporter=await User.findById(user.userId)

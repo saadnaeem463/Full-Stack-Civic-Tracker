@@ -1,8 +1,10 @@
+import { connectDB } from "@/lib/db";
 import { Report } from "@/models/report";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(req: NextRequest) {
   try {
+        await connectDB()
     const sixMonthsAgo = new Date();
     sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
     const result = await Report.aggregate([

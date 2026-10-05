@@ -2,7 +2,6 @@
 import BudgetAllocation from '@/components/web/budget-allocation'
 import CategoryBudgetAllocation from '@/components/web/cat-budget'
 import React, { useState, useEffect } from 'react'
-import BudgetCharts from '@/components/web/budget-charts'
 import PendingBudgetRequests from '@/components/web/admin/pending-budget-requests'
 import { Button } from '@/components/ui/button'
 import {
@@ -201,9 +200,6 @@ export default function BudgetPage() {
 
                         {/* Pending budget requests */}
                         <PendingBudgetRequests onResolved={fetchExpensesByCat} />
-
-                        {/* Charts */}
-                        <BudgetCharts categories={expensesByCat ?? []} expenses={expenses} />
 
                         {/* Allocation by category */}
                         <div className="mb-4 rounded-lg border border-border bg-card p-5 shadow-xs">

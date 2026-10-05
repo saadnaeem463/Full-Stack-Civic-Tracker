@@ -193,7 +193,7 @@ export default function AdminSettings() {
 
             {/* Users Management Dialog */}
             <Dialog open={showUsersDialog} onOpenChange={setShowUsersDialog}>
-                <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-3xl">
+                <DialogContent className="max-w-3xl max-h-[80vh]">
                     <DialogHeader>
                         <DialogTitle>Manage Users</DialogTitle>
                         <DialogDescription>
@@ -274,7 +274,7 @@ export default function AdminSettings() {
 
             {/* Reports Management Dialog */}
             <Dialog open={showReportsDialog} onOpenChange={setShowReportsDialog}>
-                <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-4xl">
+                <DialogContent className="max-w-4xl max-h-[80vh]">
                     <DialogHeader>
                         <DialogTitle>Manage Reports</DialogTitle>
                         <DialogDescription>

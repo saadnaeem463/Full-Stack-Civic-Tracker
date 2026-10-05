@@ -1,57 +1,38 @@
 "use client"
 
 import * as React from "react"
-import { Monitor, Moon, Sun } from "lucide-react"
+import { Moon, Sun } from "lucide-react"
 import { useTheme } from "next-themes"
 
-import { motion } from "@/components/motion"
-import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
-const options = [
-  { value: "light", label: "Light", Icon: Sun },
-  { value: "dark", label: "Dark", Icon: Moon },
-  { value: "system", label: "System", Icon: Monitor },
-] as const
-
-export function ThemeToggle({ className }: { className?: string }) {
-  const { theme, setTheme } = useTheme()
-  // false on the server and during hydration, true afterwards (avoids a theme mismatch)
-  const mounted = React.useSyncExternalStore(() => () => {}, () => true, () => false)
-  const active = mounted ? theme : undefined
+export function ThemeToggle() {
+  const { setTheme } = useTheme()
 
   return (
-    <div
-      role="radiogroup"
-      aria-label="Theme"
-      className={cn("inline-flex items-center gap-0.5 rounded-full border border-border bg-muted/60 p-0.5", className)}
-    >
-      {options.map(({ value, label, Icon }) => {
-        const selected = active === value
-        return (
-          <button
-            key={value}
-            type="button"
-            role="radio"
-            aria-checked={selected}
-            aria-label={label}
-            title={label}
-            onClick={() => setTheme(value)}
-            className={cn(
-              "relative grid size-7 place-items-center rounded-full text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring",
-              selected && "text-foreground"
-            )}
-          >
-            {selected && (
-              <motion.span
-                layoutId="theme-pill"
-                className="absolute inset-0 rounded-full bg-background shadow-sm ring-1 ring-border"
-                transition={{ type: "spring", stiffness: 500, damping: 36 }}
-              />
-            )}
-            <Icon className="relative size-3.5" aria-hidden="true" />
-          </button>
-        )
-      })}
-    </div>
+    <DropdownMenu>
+      <DropdownMenuTrigger render={<Button variant="outline" size="icon" />}>
+          <Sun className="h-[1.2rem] w-[1.2rem] scale-100 rotate-0 transition-all dark:scale-0 dark:-rotate-90" />
+          <Moon className="absolute h-[1.2rem] w-[1.2rem] scale-0 rotate-90 transition-all dark:scale-100 dark:rotate-0" />
+          <span className="sr-only">Toggle theme</span>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuItem onClick={() => setTheme("light")}>
+          Light
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => setTheme("dark")}>
+          Dark
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => setTheme("system")}>
+          System
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   )
 }
