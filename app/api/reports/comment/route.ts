@@ -5,7 +5,7 @@ import { cookies } from "next/headers";
 import { verifyToken } from "@/lib/jwt";
 import { User } from "@/models/user";
 import {COMMENTS_CHANNEL,NEW_COMMENTS_EVENT} from "@/lib/pusher-events"
-import { safeTrigger } from "@/lib/pusher";
+import { pusherServer } from "@/lib/pusher";
 import { notify } from "@/lib/notifications";
 
 interface PayloadProps {
@@ -40,7 +40,8 @@ export async function POST(req: NextRequest) {
     await findReport.save();
 
     const newComment=findReport.comments[findReport.comments.length-1]
-    await safeTrigger(COMMENTS_CHANNEL,NEW_COMMENTS_EVENT,{
+    pusherServer
+    .trigger(COMMENTS_CHANNEL,NEW_COMMENTS_EVENT,{
         _id : newComment._id,
         author:newComment.author,
         text:newComment.text,

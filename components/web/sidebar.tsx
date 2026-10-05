@@ -127,16 +127,18 @@ export function AppSidebar() {
                         className={cn(
                           "relative gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold transition-colors",
                           active
-                            ? "bg-transparent text-primary-foreground hover:bg-transparent hover:text-primary-foreground data-[active=true]:bg-transparent data-[active=true]:text-primary-foreground"
+                            ? "bg-transparent text-primary hover:bg-transparent hover:text-primary data-[active=true]:bg-transparent data-[active=true]:text-primary"
                             : "text-muted-foreground hover:bg-accent hover:text-foreground"
                         )}
                       >
                         {active && (
                           <motion.span
                             layoutId="sidebar-active-pill"
-                            className="absolute inset-0 rounded-lg bg-primary shadow-sm"
+                            className="absolute inset-0 rounded-lg bg-primary/12 ring-1 ring-primary/25"
                             transition={{ type: "spring", stiffness: 420, damping: 34 }}
-                          />
+                          >
+                            <span className="absolute left-0 top-2 bottom-2 w-1 rounded-full bg-primary" />
+                          </motion.span>
                         )}
                         <Icon size={17} aria-hidden="true" className="relative z-10 shrink-0" />
                         <span className="relative z-10">{label}</span>

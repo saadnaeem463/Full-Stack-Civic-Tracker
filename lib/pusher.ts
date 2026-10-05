@@ -25,15 +25,43 @@ export const pusherServer=
         useTLS: true,
     }))
 
-/**
- * Trigger a Pusher event and WAIT for it. On Vercel the function is frozen as soon as the
- * response is sent, so an un-awaited trigger is often never delivered (that is why changes only
- * showed up after a hard reload). Failures are logged and swallowed so realtime can never break a save.
- */
-export async function safeTrigger(channel: string, event: string, data: unknown) {
-    try {
-        await pusherServer.trigger(channel, event, data)
-    } catch (err) {
-        console.error(`Pusher trigger failed (${channel}/${event}):`, err)
-    }
-}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// Normally, when Node loads a file like lib/db.ts, it caches the whole module. So a top-level variable like:
+
+// ts
+// let cached = { conn: null }
+
+// only runs once — every other file that imports db.ts gets the same cached object, because Node reuses the cached module instead of re-running the file.
+
+// The problem: Next.js's dev server does hot-reloading — when you save a file, it re-runs (re-imports fresh) some of your modules so your changes show up without a full restart. If lib/db.ts gets re-run, that let cached = { conn: null } line executes again, wiping out your old connection and creating a brand new one. Do this a few times while coding and you can end up with dozens of open Mongo connections, since the old ones never got cleaned up.
+
+// Why global fixes it: global isn't part of any module — it's one single object that belongs to the whole running Node process itself, not to any file. Even if lib/db.ts gets re-imported and re-run ten times, there's still only one global object underneath, unaffected by module reloading. So storing the connection as global.mongoose instead of a plain let variable means it survives those reloads — the tenth re-run checks global.mongoose, sees it's already there, and reuses it instead of creating a new one.
+
+// In production this trick barely matters (files aren't hot-reloading), but it's cheap insurance and it's a very common pattern in Next.js projects for exactly this dev-mode reason

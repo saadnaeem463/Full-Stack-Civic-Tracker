@@ -1,6 +1,6 @@
 import { connectDB } from "@/lib/db";
 import { Report } from "@/models/report";
-import { safeTrigger } from "@/lib/pusher";
+import { pusherServer } from "@/lib/pusher";
 import { NextRequest, NextResponse } from "next/server";
 import { REPORTS_CHANNEL, REPORT_UPDATED_EVENT } from "@/lib/pusher-events";
 import { getAdmin } from "@/lib/get-admin";
@@ -30,7 +30,9 @@ export async function POST(req: NextRequest) {
 
         const newNote = updatedReport.internalNotes[updatedReport.internalNotes.length - 1]
 
-        await safeTrigger(REPORTS_CHANNEL, REPORT_UPDATED_EVENT, { report: updatedReport })
+        pusherServer
+            .trigger(REPORTS_CHANNEL, REPORT_UPDATED_EVENT, { report: updatedReport })
+            .catch((err) => console.log("Pusher trigger failed:", err))
 
         return NextResponse.json({ note: newNote })
 

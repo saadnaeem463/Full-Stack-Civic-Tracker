@@ -4,7 +4,7 @@ import { NextRequest,NextResponse } from "next/server";
 import { getAdmin } from "@/lib/get-admin";
 import { AuditLog } from "@/models/audit-log";
 import { User } from "@/models/user";
-import { safeTrigger } from "@/lib/pusher";
+import { pusherServer } from "@/lib/pusher";
 import { BUDGET_CHANNEL,NEW_BUDGET_REQUEST_EVENT,BUDGET_REQUEST_RESOLVED_EVENT } from "@/lib/pusher-events";
 import { notify } from "@/lib/notifications";
 export async function GET(req:NextRequest){
@@ -49,7 +49,9 @@ export async function POST(req:NextRequest){
             message : `${actor?.name ?? "A staff member"} requested a budget increase for ${category}`
         })
 
-        await safeTrigger(BUDGET_CHANNEL,NEW_BUDGET_REQUEST_EVENT,{requestId : request._id,category})
+        pusherServer
+        .trigger(BUDGET_CHANNEL,NEW_BUDGET_REQUEST_EVENT,{requestId : request._id,category})
+        .catch((err) => console.log("Pusher trigger failed:", err));
         return NextResponse.json({ message: "Budget request submitted", request }, { status: 202 });
     }catch (error: any) {
         if (error.code === 11000) {
@@ -104,7 +106,9 @@ export async function PATCH(req: NextRequest) {
             message: `${actor?.name ?? "An admin"} ${status.toLowerCase()} the budget request for ${budgetRequest.category}`}
         )
 
-        await safeTrigger(BUDGET_CHANNEL,NEW_BUDGET_REQUEST_EVENT,{requestId,category : budgetRequest.category,status})
+        pusherServer
+        .trigger(BUDGET_CHANNEL,NEW_BUDGET_REQUEST_EVENT,{requestId,category : budgetRequest.category,status})
+        .catch((err) => console.log("Pusher trigger failed:", err));
 
         // Tell the moderator/admin who filed the request, and every other admin, what happened
         const requesterId = budgetRequest.requestedBy?.toString()

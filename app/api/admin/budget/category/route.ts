@@ -1,4 +1,3 @@
-import { connectDB } from "@/lib/db";
 import { Budget,SINGLETON_ID } from "@/models/budget";
 import { CategoryBudget } from "@/models/category-budget";
 import { Expense } from "@/models/expense";
@@ -7,7 +6,6 @@ import { NextRequest, NextResponse } from "next/server";
 const CATEGORIES = ["Roads", "Lightning", "Cleanliness", "Parks"]
 export async function GET(req:NextRequest){
     try {
-        await connectDB()
         // const expenses=await Expense.aggregate([{ $group : {_id : "$category", spent : {$sum : "$amount"}}}])
         const {searchParams}=req.nextUrl
         const cat=searchParams.get("category")
@@ -16,7 +14,7 @@ export async function GET(req:NextRequest){
             console.log("Categoryyyyyyyyyyyy : ",cat)
             const found=await CategoryBudget.findOne({category : cat})
             if(!found){
-                return NextResponse.json({error : "Error finding the category budget"},{status : 500})
+                return NextResponse.json({error : "Error finding the category budget"},{status : 404})
             }
 
             const remainingBudget=found.allocated-found.spend
@@ -35,14 +33,12 @@ export async function GET(req:NextRequest){
 
         return NextResponse.json({expenses:catBudget,totalSpend:totalSpend[0]},{status : 202})
     } catch (error) {
-        console.error("admin/budget/category failed:", error)
-        return NextResponse.json({error : "failed to find expenses by category"},{status : 500})
+        return NextResponse.json({error : "failed to find expenses by category"},{status : 404})
     }
 }
 
 export async function POST(req:NextRequest){
     try {
-        await connectDB()
         const payload=await req.json()
         const {category,amount}=payload
         const budgetCheck=await CategoryBudget.aggregate([{$group : {_id: null,totalSum : {$sum : "$allocated"}}}])
@@ -59,7 +55,6 @@ export async function POST(req:NextRequest){
 
         return NextResponse.json({message : "Amount allocated for category", catBudget},{status : 202})
     } catch (error) {
-        console.error("admin/budget/category failed:", error)
-        return NextResponse.json({error : "failed to allocate budget for category"},{status : 500})
+        return NextResponse.json({error : "failed to allocate budget for category"},{status : 404})
     }
 }

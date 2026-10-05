@@ -1,5 +1,5 @@
 import { Notification } from "@/models/notification";
-import { safeTrigger } from "@/lib/pusher";
+import { pusherServer } from "@/lib/pusher";
 import { USER_CHANNEL_PREFIX,NEW_NOTIFICATION_EVENT } from "@/lib/pusher-events";
 
 export async function notify({recipient,type,message,report,triggeredBy} : {
@@ -12,7 +12,9 @@ export async function notify({recipient,type,message,report,triggeredBy} : {
     try{
         const notification=await Notification.create({recipient,type,message,report,triggeredBy})
 
-        await safeTrigger(`${USER_CHANNEL_PREFIX}-${String(recipient)}`,NEW_NOTIFICATION_EVENT,notification)
+        pusherServer
+        .trigger(`${USER_CHANNEL_PREFIX}-${String(recipient)}`,NEW_NOTIFICATION_EVENT,notification)
+        .catch((err)=>console.log("Pusher trigger failed : ",err))
 
         return notification
     }catch(err){

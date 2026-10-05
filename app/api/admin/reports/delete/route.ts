@@ -1,6 +1,6 @@
 import { connectDB } from "@/lib/db";
 import { Report } from "@/models/report";
-import { safeTrigger } from "@/lib/pusher";
+import { pusherServer } from "@/lib/pusher";
 import { NextRequest, NextResponse } from "next/server";
 import { REPORTS_CHANNEL, REPORT_DELETED_EVENT } from "@/lib/pusher-events";
 import { getAdmin } from "@/lib/get-admin";
@@ -24,7 +24,9 @@ export async function DELETE(req: NextRequest) {
 
         await Report.findByIdAndDelete(reportId)
 
-        await safeTrigger(REPORTS_CHANNEL, REPORT_DELETED_EVENT, { reportId })
+        pusherServer
+            .trigger(REPORTS_CHANNEL, REPORT_DELETED_EVENT, { reportId })
+            .catch((err) => console.log("Pusher trigger failed:", err))
 
         return NextResponse.json({ message: "Report deleted successfully" })
     } catch (error) {

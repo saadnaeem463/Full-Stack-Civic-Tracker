@@ -1,4 +1,3 @@
-import { connectDB } from "@/lib/db";
 import { Budget, SINGLETON_ID } from "@/models/budget";
 import { CategoryBudget } from "@/models/category-budget";
 import { Report} from "@/models/report";
@@ -11,7 +10,6 @@ import { buildReportCodes } from "@/lib/report-code";
 
 export async function GET(req:NextRequest){
     try {
-        await connectDB()
         const totalSpend=await CategoryBudget.aggregate([{$group : {_id : null, spend : {$sum : "$spend"},totalAllocated : {$sum : '$allocated'}}}])
         const recentDocs=await Report.find().sort({'createdAt':-1}).limit(7)
         // same TASK-000N numbering as the reports table, computed over every report
@@ -48,7 +46,6 @@ export async function GET(req:NextRequest){
         const suspicious = reports.reportsGen.reduce((sum: number, r: { flagged: number }) => sum + r.flagged, 0)
         return NextResponse.json({reports,total,suspicious,workers,totalSpend,recentReports})
     } catch (error) {
-        console.error("admin/dashboard failed:", error)
         return NextResponse.json({error :"Failed to fetch dashboard data"},{status : 409})
     }
 }

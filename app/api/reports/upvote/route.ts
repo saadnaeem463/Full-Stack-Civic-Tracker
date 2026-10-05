@@ -1,7 +1,7 @@
 import { connectDB } from "@/lib/db";
 import { Report } from "@/models/report";
 import { UPVOTE_CHANNEL,NEW_UPVOTE_EVENT } from "@/lib/pusher-events";
-import { safeTrigger } from "@/lib/pusher";
+import { pusherServer } from "@/lib/pusher";
 import { cookies } from "next/headers";
 import { NextRequest,NextResponse } from "next/server";
 import { verifyToken } from "@/lib/jwt";
@@ -42,7 +42,8 @@ export async function PUT(req:NextRequest){
 
         const upVoteCount=findReport.upVotedBy.length
 
-        await safeTrigger(UPVOTE_CHANNEL,NEW_UPVOTE_EVENT,{
+        pusherServer
+        .trigger(UPVOTE_CHANNEL,NEW_UPVOTE_EVENT,{
             reportId: findReport._id,
             upVoteCount
         })
